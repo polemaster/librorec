@@ -1,0 +1,27 @@
+:root {
+  // These colors change based on light/dark theme
+  --color-primary: #3066beff;
+  --color-background: #f8f9fa;
+  --color-background-surface: #fff;
+  --color-background-highlight: #ebebeb;
+  --color-text: #111827;
+
+  // Other colors
+  --color-secondary: ##ff7f50;
+  --color-black: #1e3231ff;
+  --color-red: #d64045ff;
+  --color-green: #20fc8fff;
+
+  // Fonts
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+[data-theme='dark'] {
+  --color-primary: #2ec0f9ff;
+  --color-background: #0f0f0f; // google
+  // --color-background: #1a1a1a; // facebook
+  --color-background-surface: #1f1f1f;
+  --color-background-highlight: #2f2f2f;
+  --color-text: #f9fafb;
+}
