@@ -12,6 +12,8 @@ describe('Icon', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(Icon);
+    fixture.componentRef.setInput('name', 'test-icon');
+
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

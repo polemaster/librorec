@@ -6,7 +6,7 @@ import { Component, input } from '@angular/core';
   templateUrl: './icon.html',
   styleUrl: './icon.scss',
 })
-export class IconComponent {
+export class Icon {
   name = input.required<string>();
   size = input<string>('1em');
 }
