@@ -4,12 +4,9 @@
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
-}
-
-* {
   margin: 0;
   padding: 0;
+  box-sizing: inherit;
   font: inherit;
 }
 
@@ -26,11 +23,22 @@ video {
   max-width: 100%;
 }
 
+html {
+  box-sizing: border-box;
+  font-size: 62.5%;
+}
+
 body {
   font-family: var(--font-body);
+  font-size: 1.6rem;
   color: var(--color-text);
-  background-color: var(--color-background-base);
+  background-color: var(--color-background);
   line-height: 1.6;
+}
+
+a {
+  text-decoration: none;
+  color: currentcolor;
 }
 
 h1,
