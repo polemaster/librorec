@@ -1,0 +1,22 @@
+footer {
+  background-color: var(--color-background-2);
+  padding: 1rem;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+
+.left {
+  &__title {
+    font-size: var(--text-2xl);
+  }
+
+  &__copyright {
+    font-size: var(--text-xs);
+  }
+}
+
+.right {
+  gap: 2rem;
+  font-size: var(--text-sm);
+}
