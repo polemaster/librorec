@@ -1,0 +1,60 @@
+.header {
+  padding: 1rem;
+  border-bottom: 1px var(--color-background-highlight) solid;
+
+  &__left {
+    color: var(--color-primary);
+    gap: 0.7rem;
+  }
+
+  &__title {
+    font-size: 3rem;
+  }
+
+  &__authentication {
+    gap: 0.7rem;
+  }
+
+  &__btn {
+    border: none;
+    border-radius: 1rem;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s;
+
+    &:hover {
+      cursor: pointer;
+    }
+
+    &--login {
+      background-color: var(--color-background);
+    }
+
+    &--signup {
+      color: var(--color-background);
+      background-color: var(--color-primary);
+
+      &:hover {
+        background-color: var(--color-primary-dark);
+      }
+    }
+  }
+}
+
+.navbar {
+  gap: 2.5rem;
+  margin-top: 0.5rem;
+
+  &__link {
+    font-size: 1.4rem;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    transition: all 0.2s ease-in-out;
+  }
+
+  &__link:hover {
+    color: var(--color-secondary);
+    text-decoration-color: var(--color-secondary);
+  }
+}
