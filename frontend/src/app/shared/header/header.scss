@@ -8,7 +8,7 @@
   }
 
   &__title {
-    font-size: 3rem;
+    font-size: var(--text-3xl);
   }
 
   &__authentication {
@@ -45,7 +45,7 @@
   margin-top: 0.5rem;
 
   &__link {
-    font-size: 1.4rem;
+    font-size: var(--text-sm);
     text-decoration: underline;
     text-decoration-color: transparent;
     text-decoration-thickness: 2px;

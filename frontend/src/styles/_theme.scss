@@ -2,6 +2,7 @@
   // These colors change based on light/dark theme
   --color-primary: #3066be;
   --color-primary-dark: color-mix(in srgb, var(--color-primary), black 20%);
+  --color-primary-light: color-mix(in srgb, var(--color-primary), white 80%);
   --color-background: #f8f9fa;
   --color-background-surface: #fff;
   --color-background-highlight: #ebebeb;
@@ -12,15 +13,12 @@
   --color-black: #1e3231ff;
   --color-red: #d64045;
   --color-green: #20fc8f;
-
-  // Fonts
-  --font-heading: 'Playfair Display', serif;
-  --font-body: 'Inter', sans-serif;
 }
 
 [data-theme='dark'] {
   --color-primary: #2ec0f9;
   --color-primary-dark: color-mix(in srgb, var(--color-primary), black 20%);
+  --color-primary-light: color-mix(in srgb, var(--color-primary), white 80%);
   --color-background: #0f0f0f; // google
   // --color-background: #1a1a1a; // facebook
   --color-background-surface: #1f1f1f;
