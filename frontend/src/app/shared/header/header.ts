@@ -1,10 +1,15 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Icon } from '../icon/icon';
+import { BookService } from '../../core/services/book.service';
 
 @Component({
   selector: 'app-header',
-  imports: [Icon],
+  imports: [Icon, RouterLink, RouterLinkActive],
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })
-export class Header {}
+export class Header {
+  protected readonly bookService = inject(BookService);
+  readonly selectedBooksCount = computed(() => this.bookService.selectedBooksCount());
+}

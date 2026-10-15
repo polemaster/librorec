@@ -1,0 +1,111 @@
+<div class="recommendations-page">
+  <header class="rec-hero">
+    <h1 class="rec-hero__title">Book Recommendations</h1>
+    <p class="rec-hero__subtitle">
+      Personalized suggestions tailored to your reading profile and preferred books.
+    </p>
+  </header>
+
+  <!-- Global State Display Section -->
+  <section class="profile-section" aria-label="Current books in global profile">
+    <div class="profile-section__header flex-between">
+      <div>
+        <h2 class="profile-section__title">Your Reading Profile</h2>
+        <p class="profile-section__subtitle">
+          Global state populated from the search page
+        </p>
+      </div>
+
+      <div class="profile-section__badge">
+        <span>Books in profile:</span>
+        <strong class="count-number">{{ selectedBooksCount() }}</strong>
+      </div>
+    </div>
+
+    @if (selectedBooksCount() === 0) {
+      <div class="empty-profile text-center">
+        <p class="empty-profile__title">No books selected yet!</p>
+        <p class="empty-profile__text">
+          Recommendations need at least one book in your profile to provide suggestions.
+        </p>
+        <a routerLink="/" class="btn-goto-search flex-center">
+          <app-icon name="search" size="1.4rem"></app-icon>
+          <span>Go to Search & Add Books</span>
+        </a>
+      </div>
+    } @else {
+      <div class="selected-grid">
+        @for (book of selectedBooks(); track book.id) {
+          <article class="selected-card flex-between">
+            <div class="selected-card__info">
+              <h3 class="selected-card__title">{{ book.title }}</h3>
+              <p class="selected-card__author">by {{ book.author }}</p>
+              @if (book.genre) {
+                <span class="selected-card__genre">{{ book.genre }}</span>
+              }
+            </div>
+            <button
+              type="button"
+              class="selected-card__remove flex-center"
+              (click)="removeBook(book.id)"
+              [attr.aria-label]="'Remove ' + book.title"
+              title="Remove book"
+            >
+              ✕
+            </button>
+          </article>
+        }
+      </div>
+
+      <div class="profile-section__footer flex-between">
+        <a routerLink="/" class="link-add-more flex-center">
+          <app-icon name="search" size="1.2rem"></app-icon>
+          <span>Search & add more books</span>
+        </a>
+      </div>
+    }
+  </section>
+
+  <!-- Recommendations Section -->
+  @if (selectedBooksCount() > 0) {
+    <section class="recommendations-section" aria-label="Generated book recommendations">
+      <div class="recommendations-section__header">
+        <h2 class="recommendations-section__title">Recommended For You</h2>
+        <p class="recommendations-section__subtitle">
+          Based on your {{ selectedBooksCount() }} selected book{{ selectedBooksCount() === 1 ? '' : 's' }}
+        </p>
+      </div>
+
+      <div class="rec-grid">
+        @for (book of recommendations(); track book.id) {
+          <article class="rec-card">
+            <div class="rec-card__body">
+              <h3 class="rec-card__title">{{ book.title }}</h3>
+              <p class="rec-card__author">by {{ book.author }}</p>
+              <div class="rec-card__tags">
+                @if (book.year) {
+                  <span class="rec-card__tag">{{ book.year }}</span>
+                }
+                @if (book.genre) {
+                  <span class="rec-card__tag rec-card__tag--genre">{{ book.genre }}</span>
+                }
+              </div>
+              @if (book.description) {
+                <p class="rec-card__description">{{ book.description }}</p>
+              }
+            </div>
+            <div class="rec-card__action">
+              <button
+                type="button"
+                class="btn-add-rec"
+                (click)="addBook(book)"
+              >
+                + Add to Profile
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+  }
+</div>
