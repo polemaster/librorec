@@ -1,12 +1,28 @@
 <header class="header flex-between">
-  <div class="header__left flex-center">
+  <a routerLink="/" class="header__left flex-center" aria-label="Librorec home">
     <app-icon name="book" size="2em"></app-icon>
     <h1 class="header__title">Librorec</h1>
-  </div>
+  </a>
 
-  <nav class="navbar flex-center">
-    <a class="navbar__link" href="#">Add books</a>
-    <a class="navbar__link" href="#">Recommendations</a>
+  <nav class="navbar flex-center" aria-label="Main navigation">
+    <a
+      class="navbar__link"
+      routerLink="/"
+      routerLinkActive="navbar__link--active"
+      [routerLinkActiveOptions]="{ exact: true }"
+    >
+      Add books
+    </a>
+    <a
+      class="navbar__link flex-center"
+      routerLink="/recommendations"
+      routerLinkActive="navbar__link--active"
+    >
+      <span>Recommendations</span>
+      @if (selectedBooksCount() > 0) {
+        <span class="navbar__badge" aria-label="Number of books in profile">{{ selectedBooksCount() }}</span>
+      }
+    </a>
   </nav>
 
   <div class="header__authentication flex-center">

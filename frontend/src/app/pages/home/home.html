@@ -1,1 +1,68 @@
-<p>home works!</p>
+<div class="home-page">
+  <header class="home-hero">
+    <h1 class="home-hero__title">Build Your Reading Profile</h1>
+    <p class="home-hero__subtitle">
+      Search for books you love. As you select books, they are added to your global profile to generate personalized book recommendations.
+    </p>
+  </header>
+
+  <!-- Separate search input component -->
+  <app-book-search />
+
+  <!-- Global Selected Books Section -->
+  <section class="selected-section" aria-label="Selected books in global state">
+    <div class="selected-section__header flex-between">
+      <div>
+        <h2 class="selected-section__title">Your Selected Books</h2>
+        <p class="selected-section__subtitle">
+          Books in your global profile available across all pages
+        </p>
+      </div>
+
+      <div class="selected-section__count-badge">
+        <span>Added to profile:</span>
+        <strong class="count-number">{{ selectedBooksCount() }}</strong>
+      </div>
+    </div>
+
+    @if (selectedBooksCount() === 0) {
+      <div class="empty-state text-center">
+        <p class="empty-state__title">No books added to your profile yet</p>
+        <p class="empty-state__text">
+          Use the search field above to find books by title, author, or genre, then click <strong>"+ Add Book"</strong> to add them.
+        </p>
+      </div>
+    } @else {
+      <div class="selected-list">
+        @for (book of selectedBooks(); track book.id) {
+          <article class="selected-chip flex-between">
+            <div class="selected-chip__details">
+              <span class="selected-chip__title">{{ book.title }}</span>
+              <span class="selected-chip__author">by {{ book.author }}</span>
+            </div>
+            <button
+              type="button"
+              class="selected-chip__remove-btn flex-center"
+              (click)="removeBook(book.id)"
+              [attr.aria-label]="'Remove ' + book.title"
+              title="Remove book"
+            >
+              ✕
+            </button>
+          </article>
+        }
+      </div>
+
+      <div class="selected-section__actions flex-between">
+        <button type="button" class="btn-clear" (click)="clearAllBooks()">
+          Clear all ({{ selectedBooksCount() }})
+        </button>
+
+        <a routerLink="/recommendations" class="btn-recommendations flex-center">
+          <span>View Recommendations ({{ selectedBooksCount() }} books)</span>
+          <app-icon name="right-arrow" size="1.2rem"></app-icon>
+        </a>
+      </div>
+    }
+  </section>
+</div>

@@ -1,0 +1,121 @@
+<section class="book-search" aria-label="Book search section">
+  <div class="book-search__header flex-between">
+    <div class="book-search__title-group">
+      <h2 class="book-search__title">Search for Books</h2>
+      <p class="book-search__subtitle">
+        Find titles you've enjoyed and add them to your reading profile.
+      </p>
+    </div>
+    <div class="book-search__badge" aria-live="polite">
+      <span class="badge-label">Books added:</span>
+      <span class="badge-count">{{ selectedBooksCount() }}</span>
+    </div>
+  </div>
+
+  <form class="search-box" (submit)="$event.preventDefault(); onSearchSubmit()">
+    <div class="search-box__input-wrapper flex-center">
+      <span class="search-box__icon flex-center" aria-hidden="true">
+        <app-icon name="search" size="1.8rem"></app-icon>
+      </span>
+      <input
+        type="search"
+        class="search-box__input"
+        [value]="searchQuery()"
+        (input)="onQueryChange($event)"
+        (keydown.enter)="$event.preventDefault(); onSearchSubmit()"
+        placeholder="Search by title, author, or genre (e.g., 1984, Orwell, Tolkien, Dune)..."
+        aria-label="Search books"
+      />
+      @if (searchQuery()) {
+        <button
+          type="button"
+          class="search-box__clear"
+          (click)="clearQuery()"
+          aria-label="Clear search query"
+          title="Clear search"
+        >
+          ✕
+        </button>
+      }
+    </div>
+    <button
+      type="submit"
+      class="search-box__submit-btn"
+      [disabled]="isLoading() || !searchQuery().trim()"
+    >
+      Search
+    </button>
+  </form>
+
+  @if (isLoading()) {
+    <div class="search-feedback search-feedback--loading flex-center" role="status">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Searching server for books...</span>
+    </div>
+  }
+
+  @if (!isLoading() && hasSearched()) {
+    @if (searchResults().length === 0) {
+      <div class="search-feedback search-feedback--empty text-center" role="status">
+        <p class="empty-title">No books found for "{{ searchQuery() }}"</p>
+        <p class="empty-suggestion">
+          Try searching for classic titles like <em>"1984"</em>, <em>"The Hobbit"</em>, <em>"Dune"</em>, or authors like <em>"George Orwell"</em> or <em>"Jane Austen"</em>.
+        </p>
+      </div>
+    } @else {
+      <div class="search-results">
+        <div class="search-results__summary flex-between">
+          <h3 class="search-results__heading">Results ({{ searchResults().length }})</h3>
+          <span class="search-results__hint">Click "+ Add" to add a book to your global profile</span>
+        </div>
+
+        <ul class="results-list" role="list">
+          @for (book of searchResults(); track book.id) {
+            <li class="book-card flex-between">
+              <div class="book-card__content">
+                <div class="book-card__main">
+                  <h4 class="book-card__title">{{ book.title }}</h4>
+                  <p class="book-card__author">by <strong>{{ book.author }}</strong></p>
+                </div>
+                <div class="book-card__meta">
+                  @if (book.year) {
+                    <span class="book-card__pill">{{ book.year }}</span>
+                  }
+                  @if (book.genre) {
+                    <span class="book-card__pill book-card__pill--genre">{{ book.genre }}</span>
+                  }
+                </div>
+                @if (book.description) {
+                  <p class="book-card__description">{{ book.description }}</p>
+                }
+              </div>
+
+              <div class="book-card__action">
+                @if (isBookSelected(book.id)) {
+                  <button
+                    type="button"
+                    class="btn btn--added"
+                    (click)="onRemoveBook(book.id)"
+                    [attr.aria-label]="'Remove ' + book.title + ' from selected books'"
+                    title="Click to remove from selected books"
+                  >
+                    ✓ Added
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="btn btn--add"
+                    (click)="onSelectBook(book)"
+                    [attr.aria-label]="'Add ' + book.title + ' to selected books'"
+                  >
+                    + Add Book
+                  </button>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  }
+</section>
