@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { signal } from '@angular/core';
 import { of } from 'rxjs';
 import { BookSearch } from './book-search';
 import { BookService } from '../../../core/services/book.service';
@@ -31,11 +33,12 @@ describe('BookSearch', () => {
     await TestBed.configureTestingModule({
       imports: [BookSearch],
       providers: [
+        provideRouter([]),
         {
           provide: BookService,
           useValue: {
-            selectedBooks: () => [],
-            selectedBooksCount: () => 0,
+            selectedBooks: signal<Book[]>([]),
+            selectedBooksCount: signal(0),
             addBook: vi.fn(),
             removeBook: vi.fn(),
             isBookSelected: vi.fn().mockReturnValue(false),
@@ -55,10 +58,12 @@ describe('BookSearch', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should display initial number of books added as 0', () => {
+  it('should have a button pointing to recommendations', () => {
     fixture.detectChanges();
-    const countElement = fixture.nativeElement.querySelector('.badge-count');
-    expect(countElement?.textContent?.trim()).toBe('0');
+    const recBtn = fixture.nativeElement.querySelector('.search-box__submit-btn');
+    expect(recBtn).toBeTruthy();
+    expect(recBtn.getAttribute('routerlink')).toBe('/recommendations');
+    expect(recBtn.textContent?.trim()).toBe('Recommendations');
   });
 
   it('should search books on manual submit', () => {
@@ -94,7 +99,7 @@ describe('BookSearch', () => {
     }
   });
 
-  it('should render search results and add book when clicked', () => {
+  it('should render search results and add book when the entire line/rectangle is clicked', () => {
     component.searchQuery.set('Orwell');
     component.onSearchSubmit();
     fixture.detectChanges();
@@ -102,17 +107,25 @@ describe('BookSearch', () => {
     const bookCards = fixture.nativeElement.querySelectorAll('.book-card');
     expect(bookCards.length).toBe(2);
 
-    const firstCardTitle = bookCards[0].querySelector('.book-card__title');
-    expect(firstCardTitle?.textContent?.trim()).toBe('1984');
+    const firstCard = bookCards[0] as HTMLElement;
+    expect(firstCard.querySelector('.book-card__title')?.textContent?.trim()).toBe('1984');
 
-    const addButton = bookCards[0].querySelector('.btn--add');
-    expect(addButton?.textContent?.trim()).toBe('+ Add Book');
-
-    addButton?.click();
+    firstCard.click();
     expect(bookService.addBook).toHaveBeenCalledWith(mockBooks[0]);
   });
 
-  it('should display "Added" button if book is selected and allow removal', () => {
+  it('should not display an "Add book" button on unselected books', () => {
+    component.searchQuery.set('Orwell');
+    component.onSearchSubmit();
+    fixture.detectChanges();
+
+    const addButton = fixture.nativeElement.querySelector('.btn--add');
+    expect(addButton).toBeFalsy();
+    const statusText = fixture.nativeElement.querySelector('.book-card__status');
+    expect(statusText).toBeFalsy();
+  });
+
+  it('should display the text "Added" when book is selected and toggle removal on click', () => {
     vi.mocked(bookService.isBookSelected).mockImplementation((id) => id === '1');
 
     component.searchQuery.set('Orwell');
@@ -120,10 +133,12 @@ describe('BookSearch', () => {
     fixture.detectChanges();
 
     const bookCards = fixture.nativeElement.querySelectorAll('.book-card');
-    const addedButton = bookCards[0].querySelector('.btn--added');
-    expect(addedButton?.textContent?.trim()).toContain('Added');
+    const firstCard = bookCards[0] as HTMLElement;
+    const statusSpan = firstCard.querySelector('.book-card__status');
+    expect(statusSpan).toBeTruthy();
+    expect(statusSpan?.textContent?.trim()).toBe('Added');
 
-    addedButton?.click();
+    firstCard.click();
     expect(bookService.removeBook).toHaveBeenCalledWith('1');
   });
 
@@ -148,5 +163,16 @@ describe('BookSearch', () => {
     expect(component.searchQuery()).toBe('');
     expect(component.searchResults()).toEqual([]);
     expect(component.hasSearched()).toBe(false);
+  });
+
+  it('should render the clear button and clear search on click', () => {
+    component.searchQuery.set('Orwell');
+    fixture.detectChanges();
+
+    const clearButton = fixture.nativeElement.querySelector('.search-box__clear') as HTMLButtonElement;
+    expect(clearButton).toBeTruthy();
+
+    clearButton.click();
+    expect(component.searchQuery()).toBe('');
   });
 });
