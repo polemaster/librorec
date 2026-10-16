@@ -1,4 +1,5 @@
-import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { BookService } from '../../../core/services/book.service';
 import { Book } from '../../../core/models/book.model';
@@ -6,7 +7,7 @@ import { Icon } from '../../../shared/icon/icon';
 
 @Component({
   selector: 'app-book-search',
-  imports: [Icon],
+  imports: [Icon, RouterLink],
   templateUrl: './book-search.html',
   styleUrl: './book-search.scss',
 })
@@ -17,7 +18,7 @@ export class BookSearch implements OnDestroy {
   readonly searchResults = signal<Book[]>([]);
   readonly isLoading = signal(false);
   readonly hasSearched = signal(false);
-  readonly selectedBooksCount = computed(() => this.bookService.selectedBooksCount());
+  readonly selectedBooksCount = this.bookService.selectedBooksCount;
 
   private readonly searchSubject = new Subject<string>();
   private readonly subscription: Subscription;
@@ -37,7 +38,7 @@ export class BookSearch implements OnDestroy {
           }
           this.isLoading.set(true);
           return this.bookService.searchBooks(trimmed);
-        })
+        }),
       )
       .subscribe({
         next: (books) => {
@@ -88,6 +89,14 @@ export class BookSearch implements OnDestroy {
     this.searchResults.set([]);
     this.hasSearched.set(false);
     this.isLoading.set(false);
+  }
+
+  toggleBook(book: Book): void {
+    if (this.isBookSelected(book.id)) {
+      this.bookService.removeBook(book.id);
+    } else {
+      this.bookService.addBook(book);
+    }
   }
 
   onSelectBook(book: Book): void {

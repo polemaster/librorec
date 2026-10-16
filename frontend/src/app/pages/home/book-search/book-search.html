@@ -1,17 +1,4 @@
 <section class="book-search" aria-label="Book search section">
-  <div class="book-search__header flex-between">
-    <div class="book-search__title-group">
-      <h2 class="book-search__title">Search for Books</h2>
-      <p class="book-search__subtitle">
-        Find titles you've enjoyed and add them to your reading profile.
-      </p>
-    </div>
-    <div class="book-search__badge" aria-live="polite">
-      <span class="badge-label">Books added:</span>
-      <span class="badge-count">{{ selectedBooksCount() }}</span>
-    </div>
-  </div>
-
   <form class="search-box" (submit)="$event.preventDefault(); onSearchSubmit()">
     <div class="search-box__input-wrapper flex-center">
       <span class="search-box__icon flex-center" aria-hidden="true">
@@ -29,22 +16,25 @@
       @if (searchQuery()) {
         <button
           type="button"
-          class="search-box__clear"
+          class="search-box__clear flex-center"
           (click)="clearQuery()"
           aria-label="Clear search query"
           title="Clear search"
         >
-          ✕
+          <svg viewBox="0 0 24 24" class="search-box__clear-icon" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
         </button>
       }
     </div>
-    <button
-      type="submit"
-      class="search-box__submit-btn"
-      [disabled]="isLoading() || !searchQuery().trim()"
+    <a
+      routerLink="/recommendations"
+      class="search-box__submit-btn flex-center"
+      aria-label="View recommendations"
     >
-      Search
-    </button>
+      Recommendations
+    </a>
   </form>
 
   @if (isLoading()) {
@@ -64,14 +54,22 @@
       </div>
     } @else {
       <div class="search-results">
-        <div class="search-results__summary flex-between">
+        <div class="search-results__summary">
           <h3 class="search-results__heading">Results ({{ searchResults().length }})</h3>
-          <span class="search-results__hint">Click "+ Add" to add a book to your global profile</span>
         </div>
 
         <ul class="results-list" role="list">
           @for (book of searchResults(); track book.id) {
-            <li class="book-card flex-between">
+            <li
+              class="book-card flex-between"
+              [class.book-card--selected]="isBookSelected(book.id)"
+              (click)="toggleBook(book)"
+              tabindex="0"
+              role="button"
+              (keydown.enter)="toggleBook(book)"
+              (keydown.space)="$event.preventDefault(); toggleBook(book)"
+              [attr.aria-label]="(isBookSelected(book.id) ? 'Remove ' : 'Select ') + book.title"
+            >
               <div class="book-card__content">
                 <div class="book-card__main">
                   <h4 class="book-card__title">{{ book.title }}</h4>
@@ -92,24 +90,7 @@
 
               <div class="book-card__action">
                 @if (isBookSelected(book.id)) {
-                  <button
-                    type="button"
-                    class="btn btn--added"
-                    (click)="onRemoveBook(book.id)"
-                    [attr.aria-label]="'Remove ' + book.title + ' from selected books'"
-                    title="Click to remove from selected books"
-                  >
-                    ✓ Added
-                  </button>
-                } @else {
-                  <button
-                    type="button"
-                    class="btn btn--add"
-                    (click)="onSelectBook(book)"
-                    [attr.aria-label]="'Add ' + book.title + ' to selected books'"
-                  >
-                    + Add Book
-                  </button>
+                  <span class="book-card__status">Added</span>
                 }
               </div>
             </li>

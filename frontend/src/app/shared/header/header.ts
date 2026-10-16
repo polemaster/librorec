@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Icon } from '../icon/icon';
 import { BookService } from '../../core/services/book.service';
@@ -11,5 +11,5 @@ import { BookService } from '../../core/services/book.service';
 })
 export class Header {
   protected readonly bookService = inject(BookService);
-  readonly selectedBooksCount = computed(() => this.bookService.selectedBooksCount());
+  readonly selectedBooksCount = this.bookService.selectedBooksCount;
 }

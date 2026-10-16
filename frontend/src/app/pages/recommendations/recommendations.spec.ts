@@ -34,6 +34,7 @@ describe('Recommendations', () => {
         selectedBooksSignal.set([...selectedBooksSignal(), book]);
         selectedBooksCountSignal.set(selectedBooksSignal().length);
       }),
+      isBookSelected: vi.fn((id: string) => selectedBooksSignal().some((b) => b.id === id)),
     };
 
     await TestBed.configureTestingModule({
@@ -53,48 +54,48 @@ describe('Recommendations', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should display empty profile state when 0 books are selected', () => {
+  it('should display empty recommendations state when 0 books are selected', () => {
     fixture.detectChanges();
-    const emptyState = fixture.nativeElement.querySelector('.empty-profile');
+    const emptyState = fixture.nativeElement.querySelector('.empty-recommendations');
     expect(emptyState).toBeTruthy();
-    expect(emptyState?.textContent).toContain('No books selected yet!');
+    expect(emptyState?.textContent).toContain('No recommendations yet');
   });
 
-  it('should display selected books from global state and recommendations when books exist', () => {
+  it('should not contain "Your Reading Profile" card', () => {
     selectedBooksSignal.set([sampleBook]);
     selectedBooksCountSignal.set(1);
     fixture.detectChanges();
 
-    const countBadge = fixture.nativeElement.querySelector('.count-number');
-    expect(countBadge?.textContent?.trim()).toBe('1');
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).not.toContain('Your Reading Profile');
+    expect(fixture.nativeElement.querySelector('.profile-section')).toBeFalsy();
+  });
 
-    const selectedCards = fixture.nativeElement.querySelectorAll('.selected-card');
-    expect(selectedCards.length).toBe(1);
-    expect(selectedCards[0].textContent).toContain('1984');
+  it('should display recommendations when books exist in profile', () => {
+    selectedBooksSignal.set([sampleBook]);
+    selectedBooksCountSignal.set(1);
+    fixture.detectChanges();
 
     const recCards = fixture.nativeElement.querySelectorAll('.rec-card');
     expect(recCards.length).toBeGreaterThan(0);
   });
 
-  it('should allow removing a book from global state', () => {
-    selectedBooksSignal.set([sampleBook]);
-    selectedBooksCountSignal.set(1);
-    fixture.detectChanges();
-
-    const removeBtn = fixture.nativeElement.querySelector('.selected-card__remove');
-    removeBtn?.click();
-
-    expect(mockBookService.removeBook).toHaveBeenCalledWith('1');
-  });
-
-  it('should allow adding a recommended book to global state', () => {
+  it('should not contain "Add to profile" buttons on recommendation cards', () => {
     selectedBooksSignal.set([sampleBook]);
     selectedBooksCountSignal.set(1);
     fixture.detectChanges();
 
     const addRecBtn = fixture.nativeElement.querySelector('.btn-add-rec');
-    addRecBtn?.click();
+    expect(addRecBtn).toBeFalsy();
+  });
 
-    expect(mockBookService.addBook).toHaveBeenCalled();
+  it('should render heading and no paragraph below it in hero', () => {
+    fixture.detectChanges();
+    const heading = fixture.nativeElement.querySelector('.rec-hero__title');
+    expect(heading).toBeTruthy();
+    expect(heading?.textContent).toBe('Book Recommendations');
+
+    const heroParagraph = fixture.nativeElement.querySelector('.rec-hero p');
+    expect(heroParagraph).toBeFalsy();
   });
 });
