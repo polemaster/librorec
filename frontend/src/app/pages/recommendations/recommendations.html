@@ -17,24 +17,25 @@
   } @else {
     <section class="recommendations-section" aria-label="Generated book recommendations">
       <div class="rec-grid">
-        @for (book of recommendations(); track book.id) {
+        @for (book of recommendations(); track book.slug) {
           <article class="rec-card">
             <div class="rec-card__body">
               <div class="rec-card__main">
-                <h3 class="rec-card__title">{{ book.title }}</h3>
-                <p class="rec-card__author">by <strong>{{ book.author }}</strong></p>
+                @if (book.title) {
+                  <h3 class="rec-card__title">{{ book.title }}</h3>
+                }
+                @if (book.authors && book.authors.length > 0) {
+                  <p class="rec-card__author">by <strong>{{ book.authors.join(', ') }}</strong></p>
+                }
               </div>
               <div class="rec-card__tags">
-                @if (book.year) {
-                  <span class="rec-card__tag">{{ book.year }}</span>
+                @if (getReleaseYear(book.releaseDate); as year) {
+                  <span class="rec-card__tag">{{ year }}</span>
                 }
-                @if (book.genre) {
-                  <span class="rec-card__tag rec-card__tag--genre">{{ book.genre }}</span>
+                @if (book.genres && book.genres.length > 0) {
+                  <span class="rec-card__tag rec-card__tag--genre">{{ book.genres[0] }}</span>
                 }
               </div>
-              @if (book.description) {
-                <p class="rec-card__description">{{ book.description }}</p>
-              }
             </div>
           </article>
         }

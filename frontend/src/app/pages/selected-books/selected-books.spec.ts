@@ -13,10 +13,14 @@ describe('SelectedBooks', () => {
   let mockBookService: Partial<BookService>;
 
   const sampleBook: Book = {
-    id: '1',
+    slug: '1984',
     title: '1984',
-    author: 'George Orwell',
-    genre: 'Dystopian Fiction',
+    releaseDate: '1949-06-08',
+    coverImgUrl: null,
+    authors: ['George Orwell'],
+    genres: ['Dystopian Fiction'],
+    moods: [],
+    tags: [],
   };
 
   beforeEach(async () => {
@@ -26,8 +30,8 @@ describe('SelectedBooks', () => {
     mockBookService = {
       selectedBooks: selectedBooksSignal.asReadonly(),
       selectedBooksCount: selectedBooksCountSignal.asReadonly(),
-      removeBook: vi.fn((id: string) => {
-        selectedBooksSignal.set(selectedBooksSignal().filter((b) => b.id !== id));
+      removeBook: vi.fn((slug: string) => {
+        selectedBooksSignal.set(selectedBooksSignal().filter((b) => b.slug !== slug));
         selectedBooksCountSignal.set(selectedBooksSignal().length);
       }),
       clearSelectedBooks: vi.fn(() => {
@@ -91,7 +95,7 @@ describe('SelectedBooks', () => {
     const removeBtn = fixture.nativeElement.querySelector('.selected-chip__remove-btn');
     removeBtn?.click();
 
-    expect(mockBookService.removeBook).toHaveBeenCalledWith('1');
+    expect(mockBookService.removeBook).toHaveBeenCalledWith('1984');
   });
 
   it('should call clearSelectedBooks when clear all button is clicked', () => {

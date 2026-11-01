@@ -1,8 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { Book } from '../models/book.model';
-import { MOCK_BOOKS } from '../data/mock-books';
 
 @Injectable({
   providedIn: 'root',
@@ -17,27 +16,27 @@ export class BookService {
   readonly selectedBooksCount = computed(() => this._selectedBooks().length);
 
   /**
-   * Add a book to the global selected books state.
+   * Add a book with all backend metadata to the global selected books state.
    */
   addBook(book: Book): void {
     const current = this._selectedBooks();
-    if (!current.some((b) => b.id === book.id)) {
+    if (!current.some((b) => b.slug === book.slug)) {
       this._selectedBooks.set([...current, book]);
     }
   }
 
   /**
-   * Remove a book from the global state by id.
+   * Remove a book from the global state by slug.
    */
-  removeBook(bookId: string): void {
-    this._selectedBooks.set(this._selectedBooks().filter((b) => b.id !== bookId));
+  removeBook(slug: string): void {
+    this._selectedBooks.set(this._selectedBooks().filter((b) => b.slug !== slug));
   }
 
   /**
    * Check if a book is already selected in the global state.
    */
-  isBookSelected(bookId: string): boolean {
-    return this._selectedBooks().some((b) => b.id === bookId);
+  isBookSelected(slug: string): boolean {
+    return this._selectedBooks().some((b) => b.slug === slug);
   }
 
   /**
@@ -48,7 +47,7 @@ export class BookService {
   }
 
   /**
-   * Send search query to server with fallback to mock response.
+   * Send search query to backend server.
    */
   searchBooks(query: string): Observable<Book[]> {
     const trimmed = query.trim();
@@ -56,25 +55,7 @@ export class BookService {
       return of([]);
     }
 
-    const params = new HttpParams().set('q', trimmed);
-    return this.http.get<Book[]>(`${this.apiUrl}/search`, { params }).pipe(
-      catchError(() => {
-        // Fallback to mock response when backend server is unavailable
-        return of(this.getMockSearchResults(trimmed));
-      })
-    );
-  }
-
-  /**
-   * Generate mock search results matching query on title, author, or genre.
-   */
-  getMockSearchResults(query: string): Book[] {
-    const normalized = query.toLowerCase().trim();
-    return MOCK_BOOKS.filter(
-      (book) =>
-        book.title.toLowerCase().includes(normalized) ||
-        book.author.toLowerCase().includes(normalized) ||
-        (book.genre && book.genre.toLowerCase().includes(normalized))
-    );
+    const params = new HttpParams().set('query', trimmed);
+    return this.http.get<Book[]>(`${this.apiUrl}/search`, { params });
   }
 }

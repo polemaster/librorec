@@ -13,10 +13,14 @@ describe('Recommendations', () => {
   let mockBookService: Partial<BookService>;
 
   const sampleBook: Book = {
-    id: '1',
+    slug: '1984',
     title: '1984',
-    author: 'George Orwell',
-    genre: 'Dystopian Fiction',
+    releaseDate: '1949-06-08',
+    coverImgUrl: null,
+    authors: ['George Orwell'],
+    genres: ['Dystopian Fiction'],
+    moods: [],
+    tags: [],
   };
 
   beforeEach(async () => {
@@ -26,15 +30,15 @@ describe('Recommendations', () => {
     mockBookService = {
       selectedBooks: selectedBooksSignal.asReadonly(),
       selectedBooksCount: selectedBooksCountSignal.asReadonly(),
-      removeBook: vi.fn((id: string) => {
-        selectedBooksSignal.set(selectedBooksSignal().filter((b) => b.id !== id));
+      removeBook: vi.fn((slug: string) => {
+        selectedBooksSignal.set(selectedBooksSignal().filter((b) => b.slug !== slug));
         selectedBooksCountSignal.set(selectedBooksSignal().length);
       }),
       addBook: vi.fn((book: Book) => {
         selectedBooksSignal.set([...selectedBooksSignal(), book]);
         selectedBooksCountSignal.set(selectedBooksSignal().length);
       }),
-      isBookSelected: vi.fn((id: string) => selectedBooksSignal().some((b) => b.id === id)),
+      isBookSelected: vi.fn((slug: string) => selectedBooksSignal().some((b) => b.slug === slug)),
     };
 
     await TestBed.configureTestingModule({
