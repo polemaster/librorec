@@ -44,52 +44,49 @@ public class BookService {
             log.info("Trying primary provider: Hardcover...");
             return searchHardcoverBooks(userQuery);
         } catch (RestClientException e) {
-            log.warn("Open Library failed ({}). Falling back to Open Library.", e.getMessage());
+            log.warn("Hardcover failed ({}). Falling back to Open Library.", e.getMessage());
             return searchOpenLibraryBooks(userQuery);
         }
     }
 
     private List<BookResponse> searchHardcoverBooks(String userQuery) {
+        if (userQuery.isBlank()) return List.of();
+
         String query = """
                 query SearchBooks($searchTerm: String!){
-                    search(query: $searchTerm, query_type: "book", page: 1, per_page: 5) {
+                    search(query: $searchTerm, query_type: "Book", page: 1, per_page: 15) {
                         results
                     }
                 }
                 """;
-        Map<String, Object> variables = Map.of(
-                "searchTerm", userQuery
-        );
+        Map<String, Object> variables = Map.of("searchTerm", userQuery);
 
         HardcoverResponse response = hardcoverClient.post()
                 .body(new GraphQlRequest(query, variables))
                 .retrieve()
                 .body(HardcoverResponse.class);
 
-//        if (response.data()) return null;
-
-        List<BookResponse> result = new ArrayList<>();
-        List<HardcoverResponse.Hit> hits = response.data().search().results().hits();
-        for (HardcoverResponse.Hit hit: hits) {
-            HardcoverResponse.Document document = hit.document();
-            String responseTitle = document.title();
-//            String responseAuthor = document.author_names().getFirst();
-            String responseAuthor = (document.author_names() != null && !document.author_names().isEmpty())
-                    ? document.author_names().getFirst()
-                    : "Unknown Author";
-            List<String> genres = document.genres();
-            String releaseDate = document.release_date();
-//            String coverImgUrl = document.image().url();
-            String coverImgUrl = (document.image() != null)
-                    ? document.image().url()
-                    : null;
-            String slug = document.slug();
-            List<String> moods = document.moods();
-            List<String> tags = document.tags();
-
-            result.add(new BookResponse(slug, responseTitle, responseAuthor, releaseDate, coverImgUrl, genres, moods, tags));
+        if (response == null || response.errors() != null) {
+            log.error("Hardcover GraphQL error: {}", response != null ? response.errors() : "null response");
+            return List.of();
         }
-        return result;
+
+
+        return response.hits().stream()
+                .map(HardcoverResponse.Hit::document)
+                .filter(doc -> doc != null && doc.slug() != null && doc.pages() > 0)
+                .limit(5)
+                .map(doc -> new BookResponse(
+                        doc.slug(),
+                        doc.title(),
+                        doc.release_date(),
+                        doc.coverUrl(),
+                        doc.author_names(),
+                        doc.genres(),
+                        doc.moods(),
+                        doc.tags()
+                ))
+                .toList();
     }
 
     private List<BookResponse> searchOpenLibraryBooks(String userQuery) {
