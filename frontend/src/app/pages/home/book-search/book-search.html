@@ -1,33 +1,108 @@
 <section class="book-search" aria-label="Book search section">
   <form class="search-box" (submit)="$event.preventDefault(); onSearchSubmit()">
-    <div class="search-box__input-wrapper flex-center">
-      <span class="search-box__icon flex-center" aria-hidden="true">
-        <app-icon name="search" size="1.8rem"></app-icon>
-      </span>
-      <input
-        type="search"
-        class="search-box__input"
-        [value]="searchQuery()"
-        (input)="onQueryChange($event)"
-        (keydown.enter)="$event.preventDefault(); onSearchSubmit()"
-        placeholder="Search by title, author, or genre (e.g., 1984, Orwell, Tolkien, Dune)..."
-        aria-label="Search books"
-      />
-      @if (searchQuery()) {
-        <button
-          type="button"
-          class="search-box__clear flex-center"
-          (click)="clearQuery()"
-          aria-label="Clear search query"
-          title="Clear search"
-        >
-          <svg viewBox="0 0 24 24" class="search-box__clear-icon" aria-hidden="true">
-            <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-          </svg>
-        </button>
+    <div class="search-box__field">
+      <div class="search-box__input-wrapper flex-center">
+        <span class="search-box__icon flex-center" aria-hidden="true">
+          <app-icon name="search" size="1.8rem"></app-icon>
+        </span>
+        <input
+          type="search"
+          class="search-box__input"
+          [value]="searchQuery()"
+          (input)="onQueryChange($event)"
+          (keydown.enter)="$event.preventDefault(); onSearchSubmit()"
+          placeholder="Search by title, author, or genre (e.g., 1984, Orwell, Tolkien, Dune)..."
+          aria-label="Search books"
+        />
+        @if (searchQuery()) {
+          <button
+            type="button"
+            class="search-box__clear flex-center"
+            (click)="clearQuery()"
+            aria-label="Clear search query"
+            title="Clear search"
+          >
+            <svg viewBox="0 0 24 24" class="search-box__clear-icon" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+        }
+      </div>
+
+      @if (isLoading()) {
+        <div class="search-feedback search-feedback--loading flex-center" role="status">
+          <span class="spinner" aria-hidden="true"></span>
+          <span>Searching server for books...</span>
+        </div>
+      }
+
+      @if (!isLoading() && hasSearched()) {
+        @if (searchResults().length === 0) {
+          <div class="search-feedback search-feedback--empty text-center" role="status">
+            <p class="empty-title">No books found for "{{ searchQuery() }}"</p>
+          </div>
+        } @else {
+          <ul class="results-list" role="list">
+            @for (book of searchResults(); track book.slug) {
+              <li
+                class="book-card flex-between"
+                [class.book-card--selected]="isBookSelected(book.slug)"
+                (click)="toggleBook(book)"
+                tabindex="0"
+                role="button"
+                (keydown.enter)="toggleBook(book)"
+                (keydown.space)="$event.preventDefault(); toggleBook(book)"
+                [attr.aria-label]="(isBookSelected(book.slug) ? 'Remove ' : 'Select ') + (book.title || 'book')"
+              >
+                <div class="book-card__left">
+                  @if (book.coverImgUrl && !isImageError(book.slug)) {
+                    <div class="book-card__cover flex-center">
+                      @if (!isImageLoaded(book.slug)) {
+                        <span
+                          class="spinner book-card__cover-spinner"
+                          role="status"
+                          aria-label="Loading cover image"
+                        ></span>
+                      }
+                      <img
+                        class="book-card__cover-img"
+                        [class.book-card__cover-img--loading]="!isImageLoaded(book.slug)"
+                        [src]="book.coverImgUrl"
+                        [alt]="(book.title || 'Book') + ' cover'"
+                        (load)="onImageLoad(book.slug)"
+                        (error)="onImageError(book.slug)"
+                      />
+                    </div>
+                  }
+
+                  <div class="book-card__content">
+                    @if (book.title) {
+                      <h4 class="book-card__title">{{ book.title }}</h4>
+                    }
+                    <div class="book-card__meta">
+                      @if (formatAuthors(book.authors); as authorsText) {
+                        <span class="book-card__author">by <strong>{{ authorsText }}</strong></span>
+                      }
+                      @if (getReleaseYear(book.releaseDate); as releaseYear) {
+                        <span class="book-card__pill">{{ releaseYear }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <div class="book-card__action">
+                  @if (isBookSelected(book.slug)) {
+                    <span class="book-card__status">Added</span>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+        }
       }
     </div>
+
     <a
       routerLink="/recommendations"
       class="search-box__submit-btn flex-center"
@@ -36,67 +111,4 @@
       Recommendations
     </a>
   </form>
-
-  @if (isLoading()) {
-    <div class="search-feedback search-feedback--loading flex-center" role="status">
-      <span class="spinner" aria-hidden="true"></span>
-      <span>Searching server for books...</span>
-    </div>
-  }
-
-  @if (!isLoading() && hasSearched()) {
-    @if (searchResults().length === 0) {
-      <div class="search-feedback search-feedback--empty text-center" role="status">
-        <p class="empty-title">No books found for "{{ searchQuery() }}"</p>
-        <p class="empty-suggestion">
-          Try searching for classic titles like <em>"1984"</em>, <em>"The Hobbit"</em>, <em>"Dune"</em>, or authors like <em>"George Orwell"</em> or <em>"Jane Austen"</em>.
-        </p>
-      </div>
-    } @else {
-      <div class="search-results">
-        <div class="search-results__summary">
-          <h3 class="search-results__heading">Results ({{ searchResults().length }})</h3>
-        </div>
-
-        <ul class="results-list" role="list">
-          @for (book of searchResults(); track book.id) {
-            <li
-              class="book-card flex-between"
-              [class.book-card--selected]="isBookSelected(book.id)"
-              (click)="toggleBook(book)"
-              tabindex="0"
-              role="button"
-              (keydown.enter)="toggleBook(book)"
-              (keydown.space)="$event.preventDefault(); toggleBook(book)"
-              [attr.aria-label]="(isBookSelected(book.id) ? 'Remove ' : 'Select ') + book.title"
-            >
-              <div class="book-card__content">
-                <div class="book-card__main">
-                  <h4 class="book-card__title">{{ book.title }}</h4>
-                  <p class="book-card__author">by <strong>{{ book.author }}</strong></p>
-                </div>
-                <div class="book-card__meta">
-                  @if (book.year) {
-                    <span class="book-card__pill">{{ book.year }}</span>
-                  }
-                  @if (book.genre) {
-                    <span class="book-card__pill book-card__pill--genre">{{ book.genre }}</span>
-                  }
-                </div>
-                @if (book.description) {
-                  <p class="book-card__description">{{ book.description }}</p>
-                }
-              </div>
-
-              <div class="book-card__action">
-                @if (isBookSelected(book.id)) {
-                  <span class="book-card__status">Added</span>
-                }
-              </div>
-            </li>
-          }
-        </ul>
-      </div>
-    }
-  }
 </section>

@@ -26,19 +26,23 @@
       </div>
     } @else {
       <div class="selected-list">
-        @for (book of selectedBooks(); track book.id) {
+        @for (book of selectedBooks(); track book.slug) {
           <article class="selected-chip flex-between">
             <div class="selected-chip__details">
-              <span class="selected-chip__title">{{ book.title }}</span>
-              <span class="selected-chip__author">by {{ book.author }}</span>
-              @if (book.genre) {
-                <span class="selected-chip__genre">{{ book.genre }}</span>
+              @if (book.title) {
+                <span class="selected-chip__title">{{ book.title }}</span>
+              }
+              @if (book.authors && book.authors.length > 0) {
+                <span class="selected-chip__author">by {{ book.authors.join(', ') }}</span>
+              }
+              @if (book.genres && book.genres.length > 0) {
+                <span class="selected-chip__genre">{{ book.genres[0] }}</span>
               }
             </div>
             <button
               type="button"
               class="selected-chip__remove-btn flex-center"
-              (click)="removeBook(book.id)"
+              (click)="removeBook(book.slug)"
               [attr.aria-label]="'Remove ' + book.title"
               title="Remove book"
             >

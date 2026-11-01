@@ -9,15 +9,25 @@ describe('BookService', () => {
   let httpTesting: HttpTestingController;
 
   const mockBook1: Book = {
-    id: 'b1',
+    slug: 'book-1',
     title: 'Test Book 1',
-    author: 'Author A',
+    releaseDate: '2020-05-10',
+    coverImgUrl: 'https://example.com/cover1.jpg',
+    authors: ['Author A'],
+    genres: ['Fiction'],
+    moods: ['adventurous'],
+    tags: ['classic'],
   };
 
   const mockBook2: Book = {
-    id: 'b2',
+    slug: 'book-2',
     title: 'Test Book 2',
-    author: 'Author B',
+    releaseDate: null,
+    coverImgUrl: null,
+    authors: ['Author B', 'Author C'],
+    genres: ['Sci-Fi'],
+    moods: ['tense'],
+    tags: ['space'],
   };
 
   beforeEach(() => {
@@ -43,30 +53,30 @@ describe('BookService', () => {
     expect(service.selectedBooksCount()).toBe(0);
   });
 
-  it('should add a book to the global state', () => {
+  it('should add a book with all backend data to the global state', () => {
     service.addBook(mockBook1);
     expect(service.selectedBooks()).toEqual([mockBook1]);
     expect(service.selectedBooksCount()).toBe(1);
-    expect(service.isBookSelected('b1')).toBe(true);
+    expect(service.isBookSelected('book-1')).toBe(true);
   });
 
-  it('should not add duplicate books', () => {
+  it('should not add duplicate books with the same slug', () => {
     service.addBook(mockBook1);
     service.addBook(mockBook1);
     expect(service.selectedBooks().length).toBe(1);
     expect(service.selectedBooksCount()).toBe(1);
   });
 
-  it('should remove a book by id', () => {
+  it('should remove a book by slug', () => {
     service.addBook(mockBook1);
     service.addBook(mockBook2);
     expect(service.selectedBooksCount()).toBe(2);
 
-    service.removeBook('b1');
+    service.removeBook('book-1');
     expect(service.selectedBooks()).toEqual([mockBook2]);
     expect(service.selectedBooksCount()).toBe(1);
-    expect(service.isBookSelected('b1')).toBe(false);
-    expect(service.isBookSelected('b2')).toBe(true);
+    expect(service.isBookSelected('book-1')).toBe(false);
+    expect(service.isBookSelected('book-2')).toBe(true);
   });
 
   it('should clear all selected books', () => {
@@ -84,33 +94,33 @@ describe('BookService', () => {
     });
 
     expect(results).toEqual([]);
-    httpTesting.expectNone('/api/books/search?q=');
+    httpTesting.expectNone('/api/books/search?query=');
   });
 
-  it('should send HTTP request when searching books and return server data', () => {
+  it('should send HTTP GET request to /api/books/search with query param and return backend data', () => {
     let results: Book[] | undefined;
     service.searchBooks('1984').subscribe((books) => {
       results = books;
     });
 
-    const req = httpTesting.expectOne('/api/books/search?q=1984');
+    const req = httpTesting.expectOne('/api/books/search?query=1984');
     expect(req.request.method).toBe('GET');
 
     req.flush([mockBook1]);
     expect(results).toEqual([mockBook1]);
   });
 
-  it('should fallback to mock response when server request fails', () => {
-    let results: Book[] | undefined;
-    service.searchBooks('Orwell').subscribe((books) => {
-      results = books;
+  it('should propagate error and not fallback to mock data when server request fails', () => {
+    let errorReceived = false;
+    service.searchBooks('Orwell').subscribe({
+      error: () => {
+        errorReceived = true;
+      },
     });
 
-    const req = httpTesting.expectOne('/api/books/search?q=Orwell');
+    const req = httpTesting.expectOne('/api/books/search?query=Orwell');
     req.error(new ProgressEvent('Network error'));
 
-    expect(results).toBeDefined();
-    expect(results?.length).toBeGreaterThan(0);
-    expect(results?.some((b) => b.author.includes('Orwell'))).toBe(true);
+    expect(errorReceived).toBe(true);
   });
 });

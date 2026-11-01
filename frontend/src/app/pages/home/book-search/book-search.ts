@@ -1,6 +1,14 @@
 import { Component, OnDestroy, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import {
+  Subject,
+  Subscription,
+  catchError,
+  debounceTime,
+  distinctUntilChanged,
+  of,
+  switchMap,
+} from 'rxjs';
 import { BookService } from '../../../core/services/book.service';
 import { Book } from '../../../core/models/book.model';
 import { Icon } from '../../../shared/icon/icon';
@@ -19,6 +27,8 @@ export class BookSearch implements OnDestroy {
   readonly isLoading = signal(false);
   readonly hasSearched = signal(false);
   readonly selectedBooksCount = this.bookService.selectedBooksCount;
+  readonly loadedImages = signal<Set<string>>(new Set());
+  readonly errorImages = signal<Set<string>>(new Set());
 
   private readonly searchSubject = new Subject<string>();
   private readonly subscription: Subscription;
@@ -33,21 +43,21 @@ export class BookSearch implements OnDestroy {
           if (!trimmed) {
             this.isLoading.set(false);
             this.hasSearched.set(false);
-            this.searchResults.set([]);
+            this.updateResults([]);
             return [];
           }
           this.isLoading.set(true);
-          return this.bookService.searchBooks(trimmed);
+          return this.bookService.searchBooks(trimmed).pipe(catchError(() => of([])));
         }),
       )
       .subscribe({
         next: (books) => {
-          this.searchResults.set(books);
+          this.updateResults(books);
           this.isLoading.set(false);
           this.hasSearched.set(true);
         },
         error: () => {
-          this.searchResults.set([]);
+          this.updateResults([]);
           this.isLoading.set(false);
           this.hasSearched.set(true);
         },
@@ -72,12 +82,12 @@ export class BookSearch implements OnDestroy {
     this.isLoading.set(true);
     this.bookService.searchBooks(query).subscribe({
       next: (books) => {
-        this.searchResults.set(books);
+        this.updateResults(books);
         this.isLoading.set(false);
         this.hasSearched.set(true);
       },
       error: () => {
-        this.searchResults.set([]);
+        this.updateResults([]);
         this.isLoading.set(false);
         this.hasSearched.set(true);
       },
@@ -86,14 +96,14 @@ export class BookSearch implements OnDestroy {
 
   clearQuery(): void {
     this.searchQuery.set('');
-    this.searchResults.set([]);
+    this.updateResults([]);
     this.hasSearched.set(false);
     this.isLoading.set(false);
   }
 
   toggleBook(book: Book): void {
-    if (this.isBookSelected(book.id)) {
-      this.bookService.removeBook(book.id);
+    if (this.isBookSelected(book.slug)) {
+      this.bookService.removeBook(book.slug);
     } else {
       this.bookService.addBook(book);
     }
@@ -103,11 +113,59 @@ export class BookSearch implements OnDestroy {
     this.bookService.addBook(book);
   }
 
-  onRemoveBook(bookId: string): void {
-    this.bookService.removeBook(bookId);
+  onRemoveBook(slug: string): void {
+    this.bookService.removeBook(slug);
   }
 
-  isBookSelected(bookId: string): boolean {
-    return this.bookService.isBookSelected(bookId);
+  isBookSelected(slug: string): boolean {
+    return this.bookService.isBookSelected(slug);
+  }
+
+  onImageLoad(slug: string): void {
+    this.loadedImages.update((prev) => {
+      const next = new Set(prev);
+      next.add(slug);
+      return next;
+    });
+  }
+
+  onImageError(slug: string): void {
+    this.errorImages.update((prev) => {
+      const next = new Set(prev);
+      next.add(slug);
+      return next;
+    });
+  }
+
+  isImageLoaded(slug: string): boolean {
+    return this.loadedImages().has(slug);
+  }
+
+  isImageError(slug: string): boolean {
+    return this.errorImages().has(slug);
+  }
+
+  formatAuthors(authors: string[] | null | undefined): string | null {
+    if (!authors || authors.length === 0) {
+      return null;
+    }
+    const filtered = authors.filter((a) => !!a && a.trim().length > 0);
+    return filtered.length > 0 ? filtered.join(', ') : null;
+  }
+
+  getReleaseYear(releaseDate: string | null | undefined): string | null {
+    if (!releaseDate) {
+      return null;
+    }
+    const match = releaseDate.match(/\d{4}/);
+    return match ? match[0] : releaseDate;
+  }
+
+  private updateResults(books: Book[]): void {
+    const safeBooks = books ?? [];
+    const currentSlugs = new Set(safeBooks.map((b) => b.slug));
+    this.loadedImages.update((prev) => new Set([...prev].filter((s) => currentSlugs.has(s))));
+    this.errorImages.update((prev) => new Set([...prev].filter((s) => currentSlugs.has(s))));
+    this.searchResults.set(safeBooks);
   }
 }

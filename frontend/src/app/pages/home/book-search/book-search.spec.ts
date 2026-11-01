@@ -13,19 +13,24 @@ describe('BookSearch', () => {
 
   const mockBooks: Book[] = [
     {
-      id: '1',
+      slug: '1984',
       title: '1984',
-      author: 'George Orwell',
-      year: 1949,
-      genre: 'Dystopian Fiction',
-      description: 'A chilling story of totalitarianism.',
+      releaseDate: '1949-06-08',
+      coverImgUrl: 'https://assets.hardcover.app/cover-1984.jpg',
+      authors: ['George Orwell'],
+      genres: ['Dystopian Fiction'],
+      moods: ['dark', 'tense'],
+      tags: ['totalitarianism'],
     },
     {
-      id: '2',
+      slug: 'animal-farm',
       title: 'Animal Farm',
-      author: 'George Orwell',
-      year: 1945,
-      genre: 'Political Satire',
+      releaseDate: null,
+      coverImgUrl: null,
+      authors: ['George Orwell', 'Second Author'],
+      genres: ['Political Satire'],
+      moods: [],
+      tags: [],
     },
   ];
 
@@ -99,19 +104,69 @@ describe('BookSearch', () => {
     }
   });
 
-  it('should render search results and add book when the entire line/rectangle is clicked', () => {
+  it('should render results directly beneath the search input and save full book data when clicked', () => {
+    component.searchQuery.set('Orwell');
+    component.onSearchSubmit();
+    fixture.detectChanges();
+
+    const searchField = fixture.nativeElement.querySelector('.search-box__field') as HTMLElement;
+    const resultsList = searchField.querySelector('.results-list');
+    expect(resultsList).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.search-results__heading')).toBeFalsy();
+
+    const bookCards = searchField.querySelectorAll('.book-card');
+    expect(bookCards.length).toBe(2);
+
+    const firstCard = bookCards[0] as HTMLElement;
+    expect(firstCard.querySelector('.book-card__title')?.textContent?.trim()).toBe('1984');
+    expect(firstCard.querySelector('.book-card__author')?.textContent?.trim()).toBe(
+      'by George Orwell',
+    );
+    expect(firstCard.querySelector('.book-card__pill')?.textContent?.trim()).toBe('1949');
+    expect(firstCard.querySelector('.book-card__pill--genre')).toBeFalsy();
+    expect(firstCard.querySelector('.book-card__description')).toBeFalsy();
+
+    firstCard.click();
+    expect(bookService.addBook).toHaveBeenCalledWith(mockBooks[0]);
+  });
+
+  it('should not display releaseDate or cover when they are null', () => {
     component.searchQuery.set('Orwell');
     component.onSearchSubmit();
     fixture.detectChanges();
 
     const bookCards = fixture.nativeElement.querySelectorAll('.book-card');
-    expect(bookCards.length).toBe(2);
+    const secondCard = bookCards[1] as HTMLElement;
 
-    const firstCard = bookCards[0] as HTMLElement;
-    expect(firstCard.querySelector('.book-card__title')?.textContent?.trim()).toBe('1984');
+    expect(secondCard.querySelector('.book-card__title')?.textContent?.trim()).toBe('Animal Farm');
+    expect(secondCard.querySelector('.book-card__author')?.textContent?.trim()).toBe(
+      'by George Orwell, Second Author',
+    );
+    expect(secondCard.querySelector('.book-card__pill')).toBeFalsy();
+    expect(secondCard.querySelector('.book-card__cover')).toBeFalsy();
+  });
 
-    firstCard.click();
-    expect(bookService.addBook).toHaveBeenCalledWith(mockBooks[0]);
+  it('should display loading icon while cover image is loading and replace with image once loaded', () => {
+    component.searchQuery.set('Orwell');
+    component.onSearchSubmit();
+    fixture.detectChanges();
+
+    const firstCard = fixture.nativeElement.querySelectorAll('.book-card')[0] as HTMLElement;
+    const coverWrapper = firstCard.querySelector('.book-card__cover') as HTMLElement;
+    expect(coverWrapper).toBeTruthy();
+
+    // Initially loading: spinner is present and image has loading class
+    expect(coverWrapper.querySelector('.book-card__cover-spinner')).toBeTruthy();
+    const coverImg = coverWrapper.querySelector('.book-card__cover-img') as HTMLImageElement;
+    expect(coverImg).toBeTruthy();
+    expect(coverImg.classList.contains('book-card__cover-img--loading')).toBe(true);
+
+    // Simulate image load event
+    coverImg.dispatchEvent(new Event('load'));
+    fixture.detectChanges();
+
+    expect(coverWrapper.querySelector('.book-card__cover-spinner')).toBeFalsy();
+    expect(coverImg.classList.contains('book-card__cover-img--loading')).toBe(false);
   });
 
   it('should not display an "Add book" button on unselected books', () => {
@@ -126,7 +181,7 @@ describe('BookSearch', () => {
   });
 
   it('should display the text "Added" when book is selected and toggle removal on click', () => {
-    vi.mocked(bookService.isBookSelected).mockImplementation((id) => id === '1');
+    vi.mocked(bookService.isBookSelected).mockImplementation((slug) => slug === '1984');
 
     component.searchQuery.set('Orwell');
     component.onSearchSubmit();
@@ -139,7 +194,7 @@ describe('BookSearch', () => {
     expect(statusSpan?.textContent?.trim()).toBe('Added');
 
     firstCard.click();
-    expect(bookService.removeBook).toHaveBeenCalledWith('1');
+    expect(bookService.removeBook).toHaveBeenCalledWith('1984');
   });
 
   it('should show empty state when search returns no books', () => {
@@ -169,7 +224,9 @@ describe('BookSearch', () => {
     component.searchQuery.set('Orwell');
     fixture.detectChanges();
 
-    const clearButton = fixture.nativeElement.querySelector('.search-box__clear') as HTMLButtonElement;
+    const clearButton = fixture.nativeElement.querySelector(
+      '.search-box__clear',
+    ) as HTMLButtonElement;
     expect(clearButton).toBeTruthy();
 
     clearButton.click();
