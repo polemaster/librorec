@@ -1,7 +1,9 @@
 package dev.polemaster.librorec.dto;
 
-import java.time.LocalDate;
+import java.util.List;
 
-public record BookResponse(String title, String author, String genre, LocalDate releaseDate, String coverImgUrl) {
+public record BookResponse(String slug, String title, String author,
+                           String releaseDate, String coverImgUrl,
+                           List<String> genres, List<String> moods, List<String> tags) {
 }
 

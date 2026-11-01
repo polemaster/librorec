@@ -17,11 +17,7 @@ public class BookController {
     private final BookService bookService;
 
     @GetMapping("/search")
-    public List<BookResponse> searchBooks(
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) String author,
-            @RequestParam(required = false) String genre) {
-
-        return bookService.searchBooks(title, author, genre);
+    public List<BookResponse> searchBooks(@RequestParam String query) {
+        return bookService.searchBooks(query);
     }
 }

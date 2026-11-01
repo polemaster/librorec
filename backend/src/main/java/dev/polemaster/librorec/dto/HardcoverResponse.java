@@ -12,9 +12,12 @@ public record HardcoverResponse(Data data) {
     public record Document(
             List<String> author_names,
             List<String> genres,
-            LocalDate release_date,
-            String title,
-            Image image
+            Image image,
+            List<String> moods,
+            String release_date,
+            String slug,
+            List<String> tags,
+            String title
     ) {}
 
     public record Image(String url) {}

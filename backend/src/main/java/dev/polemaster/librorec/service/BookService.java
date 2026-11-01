@@ -12,6 +12,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -38,26 +39,26 @@ public class BookService {
 
     }
 
-    public List<BookResponse> searchBooks(String title, String author, String genre) {
+    public List<BookResponse> searchBooks(String userQuery) {
         try {
             log.info("Trying primary provider: Hardcover...");
-            return searchHardcoverBooks(title, author, genre);
+            return searchHardcoverBooks(userQuery);
         } catch (RestClientException e) {
             log.warn("Open Library failed ({}). Falling back to Open Library.", e.getMessage());
-            return searchOpenLibraryBooks(title, author, genre);
+            return searchOpenLibraryBooks(userQuery);
         }
     }
 
-    private List<BookResponse> searchHardcoverBooks(String title, String author, String genre) {
+    private List<BookResponse> searchHardcoverBooks(String userQuery) {
         String query = """
                 query SearchBooks($searchTerm: String!){
-                    search(query: $searchTerm, page: 1, per_page: 5) {
+                    search(query: $searchTerm, query_type: "book", page: 1, per_page: 5) {
                         results
                     }
                 }
                 """;
         Map<String, Object> variables = Map.of(
-                "searchTerm", title
+                "searchTerm", userQuery
         );
 
         HardcoverResponse response = hardcoverClient.post()
@@ -65,17 +66,33 @@ public class BookService {
                 .retrieve()
                 .body(HardcoverResponse.class);
 
+//        if (response.data()) return null;
 
-        HardcoverResponse.Document document = response.data().search().results().hits().getFirst().document();
-        String responseTitle = document.title();
-        String responseAuthor = document.author_names().getFirst();
-        String responseGenre = document.genres().getFirst();
-        LocalDate releaseDate = document.release_date();
-        String coverImgUrl = document.image().url();
-        return List.of(new BookResponse(responseTitle, responseAuthor, responseGenre, releaseDate, coverImgUrl));
+        List<BookResponse> result = new ArrayList<>();
+        List<HardcoverResponse.Hit> hits = response.data().search().results().hits();
+        for (HardcoverResponse.Hit hit: hits) {
+            HardcoverResponse.Document document = hit.document();
+            String responseTitle = document.title();
+//            String responseAuthor = document.author_names().getFirst();
+            String responseAuthor = (document.author_names() != null && !document.author_names().isEmpty())
+                    ? document.author_names().getFirst()
+                    : "Unknown Author";
+            List<String> genres = document.genres();
+            String releaseDate = document.release_date();
+//            String coverImgUrl = document.image().url();
+            String coverImgUrl = (document.image() != null)
+                    ? document.image().url()
+                    : null;
+            String slug = document.slug();
+            List<String> moods = document.moods();
+            List<String> tags = document.tags();
+
+            result.add(new BookResponse(slug, responseTitle, responseAuthor, releaseDate, coverImgUrl, genres, moods, tags));
+        }
+        return result;
     }
 
-    private List<BookResponse> searchOpenLibraryBooks(String title, String author, String genre) {
+    private List<BookResponse> searchOpenLibraryBooks(String userQuery) {
 
         String response = openLibraryClient.get()
             .uri(uriBuilder -> uriBuilder
