@@ -57,7 +57,8 @@ public class RecommendationService {
 
         List<RecommendationResponse> bookResponses = new ArrayList<>();
         for (LLMResponse.LLMBookResponse book: response.books()) {
-            String hardcoverQuery = book.title() + " " + book.authors().getFirst();
+            String author = (book.authors() != null && !book.authors().isEmpty() ) ? book.authors().getFirst() : "";
+            String hardcoverQuery = book.title() + " " + author;
             RecommendationResponse recommendationResponse = bookService.searchBestMatchBook(hardcoverQuery);
             if (recommendationResponse != null)
                 bookResponses.add(recommendationResponse);
@@ -67,19 +68,19 @@ public class RecommendationService {
     }
 
     public LLMResponse generateAnswer(String client, String prompt) {
+        ChatClient chatClient = geminiClient;
+
         if (client.equals("gemini")) {
             log.info("Prompting Gemini...");
-            return geminiClient.prompt()
-                    .user(prompt)
-                    .call()
-                    .entity(LLMResponse.class);
+//            chatClient = geminiClient;
         } else if (client.equals("openAI")) {
             log.info("Prompting OpenAI...");
-            return openAiClient.prompt()
-                    .user(prompt)
-                    .call()
-                    .entity(LLMResponse.class);
+            chatClient = openAiClient;
         }
-        return null;
+
+        return chatClient.prompt()
+                .user(prompt)
+                .call()
+                .entity(LLMResponse.class);
     }
 }
