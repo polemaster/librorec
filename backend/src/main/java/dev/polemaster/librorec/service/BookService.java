@@ -4,6 +4,7 @@ package dev.polemaster.librorec.service;
 import dev.polemaster.librorec.dto.BookResponse;
 import dev.polemaster.librorec.dto.GraphQlRequest;
 import dev.polemaster.librorec.dto.HardcoverResponse;
+import dev.polemaster.librorec.dto.RecommendationResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,10 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Service
 public class BookService {
@@ -39,67 +39,71 @@ public class BookService {
 
     }
 
-    public List<BookResponse> searchBooks(String userQuery) {
+    public List<BookResponse> searchTopFiveBooks(String userQuery) {
         try {
-            log.info("Trying primary provider: Hardcover...");
-            return searchHardcoverBooks(userQuery);
+            HardcoverResponse response = searchHardcoverBooks(userQuery, 5);
+            return streamValidDocuments(response)
+                    .limit(5)
+                    .map(BookResponse::from)
+                    .toList();
         } catch (RestClientException e) {
-            log.warn("Hardcover failed ({}). Falling back to Open Library.", e.getMessage());
-            return searchOpenLibraryBooks(userQuery);
+            return searchOpenLibraryBooks(userQuery, 5);
         }
     }
 
-    private List<BookResponse> searchHardcoverBooks(String userQuery) {
-        if (userQuery.isBlank()) return List.of();
+    public RecommendationResponse searchBestMatchBook(String userQuery) {
+        try {
+            HardcoverResponse response = searchHardcoverBooks(userQuery, 1);
+            return streamValidDocuments(response)
+                    .map(RecommendationResponse::from)
+                    .findFirst()
+                    .orElse(null);
+        } catch (RestClientException e) {
+            return null;
+        }
+    }
+
+    private Stream<HardcoverResponse.Document> streamValidDocuments(HardcoverResponse response) {
+        if (response == null || response.hits() == null) return Stream.empty();
+
+        return response.hits().stream()
+                .map(HardcoverResponse.Hit::document)
+                .filter(doc -> doc != null && doc.slug() != null && doc.pages() != null && doc.pages() > 0);
+    }
+
+
+    private HardcoverResponse searchHardcoverBooks(String userQuery, int returnedBooksLimit) {
+        if (userQuery.isBlank()) return null;
 
         String query = """
-                query SearchBooks($searchTerm: String!){
-                    search(query: $searchTerm, query_type: "Book", page: 1, per_page: 15) {
+                query SearchBooks($searchTerm: String!, $limit: Int!){
+                    search(query: $searchTerm, query_type: "Book", page: 1, per_page: $limit) {
                         results
                     }
                 }
                 """;
-        Map<String, Object> variables = Map.of("searchTerm", userQuery);
+        Map<String, Object> variables = Map.of(
+                "searchTerm", userQuery,
+                "limit", returnedBooksLimit + 5
+        );
 
-        HardcoverResponse response = hardcoverClient.post()
+        return hardcoverClient.post()
                 .body(new GraphQlRequest(query, variables))
                 .retrieve()
                 .body(HardcoverResponse.class);
-
-        if (response == null || response.errors() != null) {
-            log.error("Hardcover GraphQL error: {}", response != null ? response.errors() : "null response");
-            return List.of();
-        }
-
-
-        return response.hits().stream()
-                .map(HardcoverResponse.Hit::document)
-                .filter(doc -> doc != null && doc.slug() != null && doc.pages() > 0)
-                .limit(5)
-                .map(doc -> new BookResponse(
-                        doc.slug(),
-                        doc.title(),
-                        doc.release_date(),
-                        doc.coverUrl(),
-                        doc.author_names(),
-                        doc.genres(),
-                        doc.moods(),
-                        doc.tags()
-                ))
-                .toList();
     }
 
-    private List<BookResponse> searchOpenLibraryBooks(String userQuery) {
+    private List<BookResponse> searchOpenLibraryBooks(String userQuery, int returnedBooksLimit) {
 
         String response = openLibraryClient.get()
             .uri(uriBuilder -> uriBuilder
-                .queryParam("q")
+                .queryParam("q", userQuery)
                 .build()
             )
             .retrieve()
             .body(String.class);
 
         log.info("Response: {}", response);
-        return null;
+        return List.of();
     }
 }

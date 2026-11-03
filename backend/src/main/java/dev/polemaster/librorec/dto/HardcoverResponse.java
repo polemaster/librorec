@@ -2,7 +2,7 @@ package dev.polemaster.librorec.dto;
 
 import java.util.List;
 
-public record HardcoverResponse(Data data, List<Object> errors) {
+public record HardcoverResponse(Data data) {
     public List<Hit> hits() {
         if (data == null || data.search() == null || data.search().results() == null || data.search().results().hits() == null) {
             return List.of();
@@ -23,7 +23,9 @@ public record HardcoverResponse(Data data, List<Object> errors) {
             String slug,
             List<String> tags,
             String title,
-            Integer pages
+            Integer pages,
+            FeaturedSeries featured_series,
+            String description
     ) {
         public Document {
             author_names = (author_names != null) ? author_names : List.of();
@@ -37,8 +39,15 @@ public record HardcoverResponse(Data data, List<Object> errors) {
         public String coverUrl() {
             return (image != null) ? image.url() : null;
         }
+
+        public String seriesName() {
+            return (featured_series != null) ? (featured_series.series != null ? featured_series.series.name : null) : null;
+        }
     }
 
     public record Image(String url) {}
+    public record FeaturedSeries(Series series) {
+        public record Series(String name) {}
+    }
 
 }

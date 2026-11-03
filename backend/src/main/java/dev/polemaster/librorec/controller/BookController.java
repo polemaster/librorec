@@ -18,6 +18,6 @@ public class BookController {
 
     @GetMapping("/search")
     public List<BookResponse> searchBooks(@RequestParam String query) {
-        return bookService.searchBooks(query);
+        return bookService.searchTopFiveBooks(query);
     }
 }
