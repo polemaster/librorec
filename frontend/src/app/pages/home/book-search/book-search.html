@@ -103,6 +103,17 @@
       }
     </div>
 
+    <select
+      class="search-box__method-select"
+      [value]="selectedMethod()"
+      (change)="onMethodChange($event)"
+      aria-label="Recommendation method"
+    >
+      @for (method of recommendationMethods; track method.value) {
+        <option [value]="method.value">{{ method.label }}</option>
+      }
+    </select>
+
     <a
       routerLink="/recommendations"
       class="search-box__submit-btn flex-center"

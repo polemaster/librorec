@@ -71,6 +71,25 @@ describe('BookSearch', () => {
     expect(recBtn.textContent?.trim()).toBe('Recommendations');
   });
 
+  it('should render recommendation method dropdown with Gemini and OpenRouter options and update selectedMethod', () => {
+    fixture.detectChanges();
+    const selectEl = fixture.nativeElement.querySelector(
+      '.search-box__method-select',
+    ) as HTMLSelectElement;
+    expect(selectEl).toBeTruthy();
+
+    const options = Array.from(selectEl.querySelectorAll('option'));
+    expect(options.map((o) => o.value)).toEqual(['GEMINI', 'OPENROUTER']);
+    expect(options.map((o) => o.textContent?.trim())).toEqual(['Gemini', 'OpenRouter']);
+    expect(component.selectedMethod()).toBe('GEMINI');
+
+    selectEl.value = 'OPENROUTER';
+    selectEl.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(component.selectedMethod()).toBe('OPENROUTER');
+  });
+
   it('should search books on manual submit', () => {
     component.searchQuery.set('Orwell');
     component.onSearchSubmit();

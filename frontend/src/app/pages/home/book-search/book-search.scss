@@ -20,15 +20,21 @@
     min-width: 0;
   }
 
-  &__input-wrapper {
-    width: 100%;
+  &__input-wrapper,
+  &__method-select {
     background: var(--color-background);
     border: 2px solid var(--color-background-highlight);
     border-radius: 1.2rem;
 
-    &:focus-within {
+    &:focus-within,
+    &:hover,
+    &:focus {
       border-color: var(--color-primary);
     }
+  }
+
+  &__input-wrapper {
+    width: 100%;
   }
 
   &__icon {
@@ -72,6 +78,15 @@
   &__clear-icon {
     width: 1.8rem;
     height: 1.8rem;
+  }
+
+  &__method-select {
+    padding: 1rem 1.4rem;
+    color: var(--color-text);
+    font-size: var(--text-base);
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
   }
 
   &__submit-btn {
