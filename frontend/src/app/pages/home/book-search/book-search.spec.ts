@@ -38,12 +38,15 @@ describe('BookSearch', () => {
     await TestBed.configureTestingModule({
       imports: [BookSearch],
       providers: [
-        provideRouter([]),
+        provideRouter([{ path: 'recommendations', children: [] }]),
         {
           provide: BookService,
           useValue: {
-            selectedBooks: signal<Book[]>([]),
-            selectedBooksCount: signal(0),
+            selectedBooks: signal<Book[]>(mockBooks),
+            selectedBooksCount: signal(2),
+            selectedMethod: signal('GEMINI'),
+            setSelectedMethod: vi.fn(),
+            fetchRecommendations: vi.fn(),
             addBook: vi.fn(),
             removeBook: vi.fn(),
             isBookSelected: vi.fn().mockReturnValue(false),
@@ -63,12 +66,15 @@ describe('BookSearch', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should have a button pointing to recommendations', () => {
+  it('should have a button pointing to recommendations and trigger fetchRecommendations when clicked', () => {
     fixture.detectChanges();
-    const recBtn = fixture.nativeElement.querySelector('.search-box__submit-btn');
+    const recBtn = fixture.nativeElement.querySelector('.search-box__submit-btn') as HTMLElement;
     expect(recBtn).toBeTruthy();
     expect(recBtn.getAttribute('routerlink')).toBe('/recommendations');
     expect(recBtn.textContent?.trim()).toBe('Recommendations');
+
+    recBtn.click();
+    expect(bookService.fetchRecommendations).toHaveBeenCalledWith(mockBooks, 'GEMINI');
   });
 
   it('should render recommendation method dropdown with Gemini and OpenRouter options and update selectedMethod', () => {
@@ -88,6 +94,7 @@ describe('BookSearch', () => {
     fixture.detectChanges();
 
     expect(component.selectedMethod()).toBe('OPENROUTER');
+    expect(bookService.setSelectedMethod).toHaveBeenCalledWith('OPENROUTER');
   });
 
   it('should search books on manual submit', () => {

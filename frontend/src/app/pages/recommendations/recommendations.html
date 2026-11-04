@@ -16,30 +16,245 @@
     </div>
   } @else {
     <section class="recommendations-section" aria-label="Generated book recommendations">
-      <div class="rec-grid">
-        @for (book of recommendations(); track book.slug) {
-          <article class="rec-card">
-            <div class="rec-card__body">
-              <div class="rec-card__main">
-                @if (book.title) {
-                  <h3 class="rec-card__title">{{ book.title }}</h3>
-                }
-                @if (book.authors && book.authors.length > 0) {
-                  <p class="rec-card__author">by <strong>{{ book.authors.join(', ') }}</strong></p>
-                }
-              </div>
-              <div class="rec-card__tags">
-                @if (getReleaseYear(book.releaseDate); as year) {
-                  <span class="rec-card__tag">{{ year }}</span>
-                }
-                @if (book.genres && book.genres.length > 0) {
-                  <span class="rec-card__tag rec-card__tag--genre">{{ book.genres[0] }}</span>
-                }
-              </div>
-            </div>
-          </article>
-        }
+      <div class="rec-controls flex-between">
+        <div class="rec-controls__group">
+          <label class="rec-controls__label" for="rec-method-select">Method:</label>
+          <select
+            id="rec-method-select"
+            class="rec-controls__select rec-controls__method-select"
+            [value]="selectedMethod()"
+            (change)="onMethodChange($event)"
+            aria-label="Recommendation method"
+          >
+            @for (method of recommendationMethods; track method.value) {
+              <option [value]="method.value">{{ method.label }}</option>
+            }
+          </select>
+
+          <button
+            type="button"
+            class="rec-controls__refresh-btn flex-center"
+            (click)="loadRecommendations()"
+            [disabled]="isLoading()"
+            aria-label="Get recommendations again"
+          >
+            Get recommendations again
+          </button>
+        </div>
+
+        <div class="rec-controls__group">
+          <label class="rec-controls__label" for="rec-sort-select">Sort by:</label>
+          <select
+            id="rec-sort-select"
+            class="rec-controls__select rec-controls__sort-select"
+            [value]="sortBy()"
+            (change)="onSortChange($event)"
+            aria-label="Sort recommendations"
+          >
+            @for (option of sortOptions; track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+            }
+          </select>
+
+          <div class="rec-controls__view-toggle" role="group" aria-label="View mode">
+            <button
+              type="button"
+              class="rec-controls__view-btn flex-center"
+              [class.rec-controls__view-btn--active]="viewMode() === 'grid'"
+              (click)="setViewMode('grid')"
+              [attr.aria-pressed]="viewMode() === 'grid'"
+              aria-label="Grid view"
+            >
+              Grid
+            </button>
+            <button
+              type="button"
+              class="rec-controls__view-btn flex-center"
+              [class.rec-controls__view-btn--active]="viewMode() === 'list'"
+              (click)="setViewMode('list')"
+              [attr.aria-pressed]="viewMode() === 'list'"
+              aria-label="List view"
+            >
+              List
+            </button>
+          </div>
+        </div>
       </div>
+
+      @if (isLoading()) {
+        <div class="rec-feedback rec-feedback--loading flex-center" role="status">
+          <span class="spinner" aria-hidden="true"></span>
+          <span>Loading recommendations...</span>
+        </div>
+      } @else if (errorMessage()) {
+        <div class="rec-feedback rec-feedback--error text-center" role="alert">
+          <p class="rec-feedback__title">Error loading recommendations</p>
+          <p class="rec-feedback__text">{{ errorMessage() }}</p>
+        </div>
+      } @else if (hasLoaded() && recommendations().length === 0) {
+        <div class="rec-feedback rec-feedback--empty text-center" role="status">
+          <p class="rec-feedback__title">No recommendations found</p>
+          <p class="rec-feedback__text">
+            We couldn't find recommendations right now. Try getting recommendations again or switch method.
+          </p>
+        </div>
+      } @else {
+        <div
+          class="rec-books"
+          [class.rec-grid]="viewMode() === 'grid'"
+          [class.rec-list]="viewMode() === 'list'"
+        >
+          @for (book of recommendations(); track book.slug) {
+            <article
+              class="rec-card"
+              [class.rec-card--list]="viewMode() === 'list'"
+              tabindex="0"
+              role="button"
+              (click)="openBookModal(book)"
+              (keydown.enter)="openBookModal(book)"
+              (keydown.space)="$event.preventDefault(); openBookModal(book)"
+              [attr.aria-label]="'View details for ' + (book.title || 'book')"
+            >
+              <div class="rec-card__cover flex-center">
+                @if (book.coverImgUrl && !isImageError(book.slug)) {
+                  @if (!isImageLoaded(book.slug)) {
+                    <span
+                      class="spinner rec-card__cover-spinner"
+                      role="status"
+                      aria-label="Loading cover image"
+                    ></span>
+                  }
+                  <img
+                    class="rec-card__cover-img"
+                    [class.rec-card__cover-img--loading]="!isImageLoaded(book.slug)"
+                    [src]="book.coverImgUrl"
+                    [alt]="(book.title || 'Book') + ' cover'"
+                    (load)="onImageLoad(book.slug)"
+                    (error)="onImageError(book.slug)"
+                  />
+                } @else {
+                  <app-icon name="book" size="2.4rem"></app-icon>
+                }
+              </div>
+
+              <div class="rec-card__body">
+                <div class="rec-card__main">
+                  @if (book.title) {
+                    <h3 class="rec-card__title">{{ book.title }}</h3>
+                  }
+                  @if (book.seriesName) {
+                    <p class="rec-card__series">{{ book.seriesName }}</p>
+                  }
+                  <div class="rec-card__meta flex-between">
+                    @if (formatAuthors(book.authors); as authorsText) {
+                      <span class="rec-card__author">by <strong>{{ authorsText }}</strong></span>
+                    }
+                    @if (getReleaseYear(book.releaseDate); as year) {
+                      <span class="rec-card__year">{{ year }}</span>
+                    }
+                  </div>
+                </div>
+
+                <div class="rec-card__tags">
+                  @for (genre of getTopGenres(book.genres); track genre) {
+                    <span class="rec-card__tag rec-card__tag--genre">{{ genre }}</span>
+                  }
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      }
     </section>
+  }
+
+  @if (activeBook(); as book) {
+    <div
+      class="rec-modal-backdrop flex-center"
+      (click)="closeBookModal()"
+      role="presentation"
+    >
+      <div
+        class="rec-modal"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-label]="book.title || 'Book details'"
+        (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()"
+      >
+        <button
+          type="button"
+          class="rec-modal__close-btn flex-center"
+          (click)="closeBookModal()"
+          aria-label="Close modal"
+          title="Close"
+        >
+          ✕
+        </button>
+
+        <div class="rec-modal__header">
+          @if (book.coverImgUrl && !isImageError(book.slug)) {
+            <div class="rec-modal__cover flex-center">
+              @if (!isImageLoaded(book.slug)) {
+                <span
+                  class="spinner rec-card__cover-spinner"
+                  role="status"
+                  aria-label="Loading cover image"
+                ></span>
+              }
+              <img
+                class="rec-card__cover-img"
+                [class.rec-card__cover-img--loading]="!isImageLoaded(book.slug)"
+                [src]="book.coverImgUrl"
+                [alt]="(book.title || 'Book') + ' cover'"
+                (load)="onImageLoad(book.slug)"
+                (error)="onImageError(book.slug)"
+              />
+            </div>
+          }
+
+          <div class="rec-modal__info">
+            @if (book.title) {
+              <h2 class="rec-modal__title">{{ book.title }}</h2>
+            }
+            @if (book.seriesName) {
+              <p class="rec-modal__series">{{ book.seriesName }}</p>
+            }
+            @if (formatAuthors(book.authors); as authorsText) {
+              <p class="rec-modal__author">by <strong>{{ authorsText }}</strong></p>
+            }
+            @if (book.releaseDate) {
+              <p class="rec-modal__release">Release date: {{ book.releaseDate }}</p>
+            }
+            @if (book.genres && book.genres.length > 0) {
+              <div class="rec-modal__tags">
+                @for (genre of book.genres; track genre) {
+                  <span class="rec-card__tag rec-card__tag--genre">{{ genre }}</span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        @if (book.description) {
+          <div class="rec-modal__description-box">
+            <h3 class="rec-modal__section-title">Description</h3>
+            <p class="rec-modal__description">{{ book.description }}</p>
+          </div>
+        }
+
+        <div class="rec-modal__actions">
+          <a
+            class="rec-modal__hardcover-btn flex-center"
+            [href]="getHardcoverUrl(book.slug)"
+            target="_blank"
+            rel="noopener noreferrer"
+            (click)="openBookPage(book.slug, $event)"
+          >
+            <span>Go to Hardcover page</span>
+          </a>
+        </div>
+      </div>
+    </div>
   }
 </div>

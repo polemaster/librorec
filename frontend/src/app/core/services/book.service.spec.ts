@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { BookService } from './book.service';
-import { Book } from '../models/book.model';
+import { Book, RecommendationResponse } from '../models/book.model';
 
 describe('BookService', () => {
   let service: BookService;
@@ -30,6 +30,17 @@ describe('BookService', () => {
     tags: ['space'],
   };
 
+  const mockRecommendation: RecommendationResponse = {
+    slug: 'rec-book-1',
+    title: 'Recommended Book 1',
+    releaseDate: '2021-01-15',
+    coverImgUrl: 'https://example.com/rec1.jpg',
+    seriesName: 'Rec Series',
+    description: 'An exciting recommended book.',
+    authors: ['Rec Author'],
+    genres: ['Fiction'],
+  };
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
@@ -47,10 +58,17 @@ describe('BookService', () => {
     httpTesting.verify();
   });
 
-  it('should be created with empty selected books', () => {
+  it('should be created with empty selected books and GEMINI as default method', () => {
     expect(service).toBeTruthy();
     expect(service.selectedBooks()).toEqual([]);
     expect(service.selectedBooksCount()).toBe(0);
+    expect(service.selectedMethod()).toBe('GEMINI');
+    expect(service.recommendedBooks()).toEqual([]);
+  });
+
+  it('should update selected recommendation method', () => {
+    service.setSelectedMethod('OPENROUTER');
+    expect(service.selectedMethod()).toBe('OPENROUTER');
   });
 
   it('should add a book with all backend data to the global state', () => {
@@ -79,12 +97,13 @@ describe('BookService', () => {
     expect(service.isBookSelected('book-2')).toBe(true);
   });
 
-  it('should clear all selected books', () => {
+  it('should clear all selected books and reset recommendations state', () => {
     service.addBook(mockBook1);
     service.addBook(mockBook2);
     service.clearSelectedBooks();
     expect(service.selectedBooks()).toEqual([]);
     expect(service.selectedBooksCount()).toBe(0);
+    expect(service.recommendedBooks()).toEqual([]);
   });
 
   it('should return empty observable when search query is whitespace or empty', () => {
@@ -122,5 +141,57 @@ describe('BookService', () => {
     req.error(new ProgressEvent('Network error'));
 
     expect(errorReceived).toBe(true);
+  });
+
+  it('should return empty observable and make no HTTP call when getRecommendations is called with no books', () => {
+    let results: RecommendationResponse[] | undefined;
+    service.getRecommendations([]).subscribe((recs) => {
+      results = recs;
+    });
+
+    expect(results).toEqual([]);
+    httpTesting.expectNone('/api/recommendations?method=GEMINI');
+  });
+
+  it('should send HTTP POST request to /api/recommendations in BookRequest format with method param', () => {
+    service.addBook(mockBook1);
+
+    let results: RecommendationResponse[] | undefined;
+    service.getRecommendations(service.selectedBooks(), 'OPENROUTER').subscribe((recs) => {
+      results = recs;
+    });
+
+    const req = httpTesting.expectOne('/api/recommendations?method=OPENROUTER');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual([
+      {
+        slug: 'book-1',
+        title: 'Test Book 1',
+        releaseDate: '2020-05-10',
+        authors: ['Author A'],
+        genres: ['Fiction'],
+        moods: ['adventurous'],
+        tags: ['classic'],
+      },
+    ]);
+
+    req.flush([mockRecommendation]);
+    expect(results).toEqual([mockRecommendation]);
+  });
+
+  it('should store and remember recommended books in global state when fetchRecommendations is called', () => {
+    service.addBook(mockBook1);
+    service.fetchRecommendations(service.selectedBooks(), 'GEMINI');
+
+    expect(service.isRecommendationsLoading()).toBe(true);
+
+    const req = httpTesting.expectOne('/api/recommendations?method=GEMINI');
+    expect(req.request.method).toBe('POST');
+    req.flush([mockRecommendation]);
+
+    expect(service.isRecommendationsLoading()).toBe(false);
+    expect(service.hasLoadedRecommendations()).toBe(true);
+    expect(service.recommendedBooks()).toEqual([mockRecommendation]);
+    expect(service.recommendationsError()).toBeNull();
   });
 });
