@@ -10,8 +10,15 @@ import {
   switchMap,
 } from 'rxjs';
 import { BookService } from '../../../core/services/book.service';
-import { Book } from '../../../core/models/book.model';
+import {
+  Book,
+  RECOMMENDATION_METHODS,
+  RecommendationMethod,
+  RecommendationMethodOption,
+} from '../../../core/models/book.model';
 import { Icon } from '../../../shared/icon/icon';
+
+export type { RecommendationMethod, RecommendationMethodOption };
 
 @Component({
   selector: 'app-book-search',
@@ -22,6 +29,10 @@ import { Icon } from '../../../shared/icon/icon';
 export class BookSearch implements OnDestroy {
   protected readonly bookService = inject(BookService);
 
+  readonly recommendationMethods: RecommendationMethodOption[] = RECOMMENDATION_METHODS;
+  readonly selectedMethod = signal<RecommendationMethod>(
+    this.bookService.selectedMethod?.() ?? 'GEMINI',
+  );
   readonly searchQuery = signal('');
   readonly searchResults = signal<Book[]>([]);
   readonly isLoading = signal(false);
@@ -72,6 +83,18 @@ export class BookSearch implements OnDestroy {
     const value = (event.target as HTMLInputElement).value;
     this.searchQuery.set(value);
     this.searchSubject.next(value);
+  }
+
+  onMethodChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value as RecommendationMethod;
+    this.selectedMethod.set(value);
+    this.bookService.setSelectedMethod?.(value);
+  }
+
+  onGetRecommendations(): void {
+    const method = this.selectedMethod();
+    this.bookService.setSelectedMethod?.(method);
+    this.bookService.fetchRecommendations?.(this.bookService.selectedBooks(), method);
   }
 
   onSearchSubmit(): void {

@@ -2,6 +2,7 @@ package dev.polemaster.librorec.service;
 
 import dev.polemaster.librorec.dto.BookRequest;
 import dev.polemaster.librorec.dto.LLMResponse;
+import dev.polemaster.librorec.dto.RecommendationMethod;
 import dev.polemaster.librorec.dto.RecommendationResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,7 @@ public class RecommendationService {
         this.bookService = bookService;
     }
 
-    public List<RecommendationResponse> getRecommendations(List<BookRequest> books) {
+    public List<RecommendationResponse> getRecommendations(List<BookRequest> books, RecommendationMethod method) {
         if (books.isEmpty()) return List.of();
 
         String booksText = objectMapper.writeValueAsString(books);
@@ -49,7 +50,7 @@ public class RecommendationService {
                     }
                 ]
                 """.formatted(booksText);
-        LLMResponse response = generateAnswer("gemini", prompt);
+        LLMResponse response = generateAnswer(method, prompt);
         log.info("Prompting finished. Acquiring books metadata...");
 
         if (response.books().size() > 10)
@@ -67,16 +68,17 @@ public class RecommendationService {
         return bookResponses;
     }
 
-    public LLMResponse generateAnswer(String client, String prompt) {
-        ChatClient chatClient = geminiClient;
-
-        if (client.equals("gemini")) {
-            log.info("Prompting Gemini...");
-//            chatClient = geminiClient;
-        } else if (client.equals("openAI")) {
-            log.info("Prompting OpenAI...");
-            chatClient = openAiClient;
-        }
+    public LLMResponse generateAnswer(RecommendationMethod method, String prompt) {
+        ChatClient chatClient = switch (method) {
+            case GEMINI -> {
+                log.info("Prompting Gemini...");
+                yield geminiClient;
+            }
+            case OPENROUTER -> {
+                log.info("Prompting OpenRouter...");
+                yield openAiClient;
+            }
+        };
 
         return chatClient.prompt()
                 .user(prompt)
