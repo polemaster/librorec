@@ -35,8 +35,6 @@ public class BookService {
             .defaultHeader("Authorization", authorizationKey)
             .defaultHeader("Content-Type", "application/json")
             .build();
-
-
     }
 
     public List<BookResponse> searchTopFiveBooks(String userQuery) {
