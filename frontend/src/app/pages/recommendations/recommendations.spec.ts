@@ -3,7 +3,12 @@ import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
 import { Recommendations } from './recommendations';
 import { BookService } from '../../core/services/book.service';
-import { Book, RecommendationMethod, RecommendationResponse } from '../../core/models/book.model';
+import {
+  Book,
+  BookSearchApi,
+  RecommendationMethod,
+  RecommendationResponse,
+} from '../../core/models/book.model';
 
 describe('Recommendations', () => {
   let component: Recommendations;
@@ -11,6 +16,7 @@ describe('Recommendations', () => {
   let selectedBooksSignal: ReturnType<typeof signal<Book[]>>;
   let selectedBooksCountSignal: ReturnType<typeof signal<number>>;
   let selectedMethodSignal: ReturnType<typeof signal<RecommendationMethod>>;
+  let selectedSearchApiSignal: ReturnType<typeof signal<BookSearchApi>>;
   let recommendedBooksSignal: ReturnType<typeof signal<RecommendationResponse[]>>;
   let isRecommendationsLoadingSignal: ReturnType<typeof signal<boolean>>;
   let recommendationsErrorSignal: ReturnType<typeof signal<string | null>>;
@@ -18,7 +24,7 @@ describe('Recommendations', () => {
   let mockBookService: Partial<BookService>;
 
   const sampleBook: Book = {
-    slug: '1984',
+    id: '1984',
     title: '1984',
     releaseDate: '1949-06-08',
     coverImgUrl: null,
@@ -30,7 +36,7 @@ describe('Recommendations', () => {
 
   const mockRecommendedBooks: RecommendationResponse[] = [
     {
-      slug: 'dune',
+      id: 'dune',
       title: 'Dune',
       releaseDate: '1965-08-01',
       coverImgUrl: 'https://assets.hardcover.app/dune.jpg',
@@ -40,7 +46,7 @@ describe('Recommendations', () => {
       genres: ['Science Fiction', 'Space Opera', 'Adventure', 'Politics', 'Classics'],
     },
     {
-      slug: 'brave-new-world',
+      id: 'brave-new-world',
       title: 'Brave New World',
       releaseDate: '1932-01-01',
       coverImgUrl: null,
@@ -50,10 +56,10 @@ describe('Recommendations', () => {
       genres: ['Dystopian Fiction'],
     },
     {
-      slug: 'animal-farm',
+      id: 'OL1168007W',
       title: 'Animal Farm',
-      releaseDate: '1945-08-17',
-      coverImgUrl: 'https://assets.hardcover.app/animal-farm.jpg',
+      releaseDate: '1945',
+      coverImgUrl: 'https://covers.openlibrary.org/b/id/12345-L.jpg',
       seriesName: null,
       description: null,
       authors: ['George Orwell'],
@@ -65,6 +71,7 @@ describe('Recommendations', () => {
     selectedBooksSignal = signal<Book[]>([]);
     selectedBooksCountSignal = signal<number>(0);
     selectedMethodSignal = signal<RecommendationMethod>('GEMINI');
+    selectedSearchApiSignal = signal<BookSearchApi>('HARDCOVER');
     recommendedBooksSignal = signal<RecommendationResponse[]>([]);
     isRecommendationsLoadingSignal = signal<boolean>(false);
     recommendationsErrorSignal = signal<string | null>(null);
@@ -74,6 +81,7 @@ describe('Recommendations', () => {
       selectedBooks: selectedBooksSignal.asReadonly(),
       selectedBooksCount: selectedBooksCountSignal.asReadonly(),
       selectedMethod: selectedMethodSignal.asReadonly(),
+      selectedSearchApi: selectedSearchApiSignal.asReadonly(),
       recommendedBooks: recommendedBooksSignal.asReadonly(),
       isRecommendationsLoading: isRecommendationsLoadingSignal.asReadonly(),
       recommendationsError: recommendationsErrorSignal.asReadonly(),
@@ -81,22 +89,28 @@ describe('Recommendations', () => {
       setSelectedMethod: vi.fn((method: RecommendationMethod) => {
         selectedMethodSignal.set(method);
       }),
-      fetchRecommendations: vi.fn((_books, method) => {
+      setSelectedSearchApi: vi.fn((api: BookSearchApi) => {
+        selectedSearchApiSignal.set(api);
+      }),
+      fetchRecommendations: vi.fn((_books, method, api) => {
         if (method) {
           selectedMethodSignal.set(method);
+        }
+        if (api) {
+          selectedSearchApiSignal.set(api);
         }
         recommendedBooksSignal.set(mockRecommendedBooks);
         hasLoadedRecommendationsSignal.set(true);
       }),
-      removeBook: vi.fn((slug: string) => {
-        selectedBooksSignal.set(selectedBooksSignal().filter((b) => b.slug !== slug));
+      removeBook: vi.fn((id: string) => {
+        selectedBooksSignal.set(selectedBooksSignal().filter((b) => b.id !== id));
         selectedBooksCountSignal.set(selectedBooksSignal().length);
       }),
       addBook: vi.fn((book: Book) => {
         selectedBooksSignal.set([...selectedBooksSignal(), book]);
         selectedBooksCountSignal.set(selectedBooksSignal().length);
       }),
-      isBookSelected: vi.fn((slug: string) => selectedBooksSignal().some((b) => b.slug === slug)),
+      isBookSelected: vi.fn((id: string) => selectedBooksSignal().some((b) => b.id === id)),
     };
 
     await TestBed.configureTestingModule({
@@ -256,7 +270,7 @@ describe('Recommendations', () => {
     expect(container.classList.contains('rec-grid')).toBe(true);
   });
 
-  it('should open modal with all book info including description and Hardcover button when a book is clicked, and close on X or outside click', () => {
+  it('should open modal with all book info including description and Hardcover button when a Hardcover book is clicked', () => {
     const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
 
     selectedBooksSignal.set([sampleBook]);
@@ -293,12 +307,12 @@ describe('Recommendations', () => {
       'Classics',
     ]);
 
-    const hardcoverBtn = modal.querySelector('.rec-modal__hardcover-btn') as HTMLAnchorElement;
-    expect(hardcoverBtn).toBeTruthy();
-    expect(hardcoverBtn.getAttribute('href')).toBe('https://hardcover.app/books/dune');
-    expect(hardcoverBtn.getAttribute('target')).toBe('_blank');
+    const externalBtn = modal.querySelector('.rec-modal__hardcover-btn') as HTMLAnchorElement;
+    expect(externalBtn).toBeTruthy();
+    expect(externalBtn.getAttribute('href')).toBe('https://hardcover.app/books/dune');
+    expect(externalBtn.textContent?.trim()).toBe('Go to Hardcover page');
 
-    hardcoverBtn.click();
+    externalBtn.click();
     expect(openSpy).toHaveBeenCalledWith(
       'https://hardcover.app/books/dune',
       '_blank',
@@ -311,15 +325,36 @@ describe('Recommendations', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.rec-modal')).toBeFalsy();
 
-    // Reopen and close via clicking outside (backdrop)
-    firstCard.click();
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.rec-modal')).toBeTruthy();
+    openSpy.mockRestore();
+  });
 
-    const backdrop = fixture.nativeElement.querySelector('.rec-modal-backdrop') as HTMLElement;
-    backdrop.click();
+  it('should link to OpenLibrary (/works/id) and hide description box when an OpenLibrary book is opened', () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+    selectedBooksSignal.set([sampleBook]);
+    selectedBooksCountSignal.set(1);
+    recommendedBooksSignal.set(mockRecommendedBooks);
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.rec-modal')).toBeFalsy();
+
+    const thirdCard = fixture.nativeElement.querySelectorAll('.rec-card')[2] as HTMLElement;
+    thirdCard.click();
+    fixture.detectChanges();
+
+    const modal = fixture.nativeElement.querySelector('.rec-modal') as HTMLElement;
+    expect(modal).toBeTruthy();
+    expect(modal.querySelector('.rec-modal__description-box')).toBeFalsy();
+
+    const externalBtn = modal.querySelector('.rec-modal__hardcover-btn') as HTMLAnchorElement;
+    expect(externalBtn).toBeTruthy();
+    expect(externalBtn.getAttribute('href')).toBe('https://openlibrary.org/works/OL1168007W');
+    expect(externalBtn.textContent?.trim()).toBe('Go to OpenLibrary page');
+
+    externalBtn.click();
+    expect(openSpy).toHaveBeenCalledWith(
+      'https://openlibrary.org/works/OL1168007W',
+      '_blank',
+      'noopener,noreferrer',
+    );
 
     openSpy.mockRestore();
   });
@@ -327,21 +362,10 @@ describe('Recommendations', () => {
   it('should only send a new request when explicitly clicking the Get recommendations again button', () => {
     selectedBooksSignal.set([sampleBook]);
     selectedBooksCountSignal.set(1);
+    selectedMethodSignal.set('OPENROUTER');
+    selectedSearchApiSignal.set('OPENLIBRARY');
     fixture.detectChanges();
 
-    expect(mockBookService.fetchRecommendations).not.toHaveBeenCalled();
-
-    const methodSelect = fixture.nativeElement.querySelector(
-      '.rec-controls__method-select',
-    ) as HTMLSelectElement;
-    expect(methodSelect).toBeTruthy();
-
-    methodSelect.value = 'OPENROUTER';
-    methodSelect.dispatchEvent(new Event('change'));
-    fixture.detectChanges();
-
-    expect(component.selectedMethod()).toBe('OPENROUTER');
-    expect(mockBookService.setSelectedMethod).toHaveBeenCalledWith('OPENROUTER');
     expect(mockBookService.fetchRecommendations).not.toHaveBeenCalled();
 
     const refreshBtn = fixture.nativeElement.querySelector(
@@ -352,7 +376,11 @@ describe('Recommendations', () => {
     fixture.detectChanges();
 
     expect(mockBookService.fetchRecommendations).toHaveBeenCalledTimes(1);
-    expect(mockBookService.fetchRecommendations).toHaveBeenCalledWith([sampleBook], 'OPENROUTER');
+    expect(mockBookService.fetchRecommendations).toHaveBeenCalledWith(
+      [sampleBook],
+      'OPENROUTER',
+      'OPENLIBRARY',
+    );
   });
 
   it('should preserve original backend order and sort by recommended order, title, or author', () => {
@@ -362,10 +390,10 @@ describe('Recommendations', () => {
     fixture.detectChanges();
 
     // Default: original recommended order: Dune, Brave New World, Animal Farm
-    expect(component.recommendations().map((b) => b.slug)).toEqual([
+    expect(component.recommendations().map((b) => b.id)).toEqual([
       'dune',
       'brave-new-world',
-      'animal-farm',
+      'OL1168007W',
     ]);
 
     const sortSelect = fixture.nativeElement.querySelector(
@@ -383,21 +411,21 @@ describe('Recommendations', () => {
     sortSelect.dispatchEvent(new Event('change'));
     fixture.detectChanges();
 
-    expect(component.recommendations().map((b) => b.slug)).toEqual([
-      'animal-farm',
+    expect(component.recommendations().map((b) => b.id)).toEqual([
+      'OL1168007W',
       'brave-new-world',
       'dune',
     ]);
 
-    // Sort by first author: Aldous Huxley (brave-new-world), Frank Herbert (dune), George Orwell (animal-farm)
+    // Sort by first author: Aldous Huxley (brave-new-world), Frank Herbert (dune), George Orwell (OL1168007W)
     sortSelect.value = 'author';
     sortSelect.dispatchEvent(new Event('change'));
     fixture.detectChanges();
 
-    expect(component.recommendations().map((b) => b.slug)).toEqual([
+    expect(component.recommendations().map((b) => b.id)).toEqual([
       'brave-new-world',
       'dune',
-      'animal-farm',
+      'OL1168007W',
     ]);
 
     // Sort back by original recommended order: Dune, Brave New World, Animal Farm
@@ -405,10 +433,10 @@ describe('Recommendations', () => {
     sortSelect.dispatchEvent(new Event('change'));
     fixture.detectChanges();
 
-    expect(component.recommendations().map((b) => b.slug)).toEqual([
+    expect(component.recommendations().map((b) => b.id)).toEqual([
       'dune',
       'brave-new-world',
-      'animal-farm',
+      'OL1168007W',
     ]);
   });
 

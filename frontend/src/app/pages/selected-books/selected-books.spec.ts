@@ -13,7 +13,7 @@ describe('SelectedBooks', () => {
   let mockBookService: Partial<BookService>;
 
   const sampleBook: Book = {
-    slug: '1984',
+    id: '1984',
     title: '1984',
     releaseDate: '1949-06-08',
     coverImgUrl: null,
@@ -30,8 +30,8 @@ describe('SelectedBooks', () => {
     mockBookService = {
       selectedBooks: selectedBooksSignal.asReadonly(),
       selectedBooksCount: selectedBooksCountSignal.asReadonly(),
-      removeBook: vi.fn((slug: string) => {
-        selectedBooksSignal.set(selectedBooksSignal().filter((b) => b.slug !== slug));
+      removeBook: vi.fn((id: string) => {
+        selectedBooksSignal.set(selectedBooksSignal().filter((b) => b.id !== id));
         selectedBooksCountSignal.set(selectedBooksSignal().length);
       }),
       clearSelectedBooks: vi.fn(() => {

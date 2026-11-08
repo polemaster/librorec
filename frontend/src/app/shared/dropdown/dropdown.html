@@ -1,0 +1,50 @@
+<div class="dropdown" [class.dropdown--open]="isOpen()">
+  <button
+    type="button"
+    class="dropdown__trigger flex-between"
+    [class.dropdown__trigger--open]="isOpen()"
+    [attr.aria-expanded]="isOpen()"
+    aria-haspopup="listbox"
+    [attr.aria-label]="ariaLabel()"
+    (click)="toggle()"
+    (keydown)="onTriggerKeydown($event)"
+  >
+    <span class="dropdown__selected">
+      @if (selectedOption(); as selected) {
+        <span class="dropdown__selected-label">{{ selected.label }}</span>
+      }
+    </span>
+    <span class="dropdown__chevron flex-center" [class.dropdown__chevron--open]="isOpen()">
+      <app-icon name="chevron-down" size="1.6rem"></app-icon>
+    </span>
+  </button>
+
+  @if (isOpen()) {
+    <ul class="dropdown__menu" role="listbox" [attr.aria-label]="ariaLabel()">
+      @for (option of options(); track option.value) {
+        <li
+          class="dropdown__option flex-between"
+          [class.dropdown__option--selected]="option.value === value()"
+          role="option"
+          tabindex="0"
+          [attr.aria-selected]="option.value === value()"
+          (click)="selectOption(option)"
+          (keydown.enter)="$event.preventDefault(); selectOption(option)"
+          (keydown.space)="$event.preventDefault(); selectOption(option)"
+        >
+          <div class="dropdown__option-content">
+            <span class="dropdown__option-label">{{ option.label }}</span>
+            @if (option.description) {
+              <span class="dropdown__option-desc">{{ option.description }}</span>
+            }
+          </div>
+          @if (option.value === value()) {
+            <span class="dropdown__option-check flex-center" aria-hidden="true">
+              <app-icon name="check" size="1.5rem"></app-icon>
+            </span>
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>

@@ -36,8 +36,12 @@ public class BookService {
             .build();
     }
 
-    public List<BookResponse> searchTopFiveBooks(String userQuery) {
+    public List<BookResponse> searchTopFiveBooks(String userQuery, BookSearchApi api) {
         if (userQuery == null || userQuery.isBlank()) return List.of();
+
+        if (api == BookSearchApi.OPENLIBRARY) {
+            return fetchTopFiveFromOpenLibrary(userQuery);
+        }
 
         try {
             HardcoverResponse response = searchHardcoverBooks(userQuery, 5);
@@ -47,21 +51,16 @@ public class BookService {
                     .toList();
         } catch (RestClientException e) {
             log.warn("Hardcover API request failed for query '{}'. Falling back to OpenLibrary.", userQuery, e);
-            try {
-                OpenLibraryResponse response = searchOpenLibraryBooks(userQuery, 5);
-                return streamValidOpenLibraryDocuments(response)
-                        .limit(5)
-                        .map(BookResponse::from)
-                        .toList();
-            } catch (RestClientException fallbackEx) {
-                log.error("OpenLibrary fallback API also failed for query '{}'.", userQuery, fallbackEx);
-                return List.of();
-            }
+            return fetchTopFiveFromOpenLibrary(userQuery);
         }
     }
 
-    public RecommendationResponse searchBestMatchBook(String userQuery) {
+    public RecommendationResponse searchBestMatchBook(String userQuery, BookSearchApi api) {
         if (userQuery == null || userQuery.isBlank()) return null;
+
+        if (api == BookSearchApi.OPENLIBRARY) {
+            return fetchBestMatchFromOpenLibrary(userQuery);
+        }
 
         try {
             HardcoverResponse response = searchHardcoverBooks(userQuery, 1);
@@ -71,16 +70,33 @@ public class BookService {
                     .orElse(null);
         } catch (RestClientException e) {
             log.warn("Hardcover API request failed for query '{}'. Falling back to OpenLibrary.", userQuery, e);
-            try {
-                OpenLibraryResponse response = searchOpenLibraryBooks(userQuery, 1);
-                return streamValidOpenLibraryDocuments(response)
-                        .map(RecommendationResponse::from)
-                        .findFirst()
-                        .orElse(null);
-            } catch (RestClientException fallbackEx) {
-                log.error("OpenLibrary fallback API also failed for query '{}'.", userQuery, fallbackEx);
-                return null;
-            }
+            return fetchBestMatchFromOpenLibrary(userQuery);
+        }
+    }
+
+    private List<BookResponse> fetchTopFiveFromOpenLibrary(String userQuery) {
+        try {
+            OpenLibraryResponse response = searchOpenLibraryBooks(userQuery, 5);
+            return streamValidOpenLibraryDocuments(response)
+                    .limit(5)
+                    .map(BookResponse::from)
+                    .toList();
+        } catch (RestClientException e) {
+            log.error("OpenLibrary API failed for query '{}'.", userQuery, e);
+            return List.of();
+        }
+    }
+
+    private RecommendationResponse fetchBestMatchFromOpenLibrary(String userQuery) {
+        try {
+            OpenLibraryResponse response = searchOpenLibraryBooks(userQuery, 1);
+            return streamValidOpenLibraryDocuments(response)
+                    .map(RecommendationResponse::from)
+                    .findFirst()
+                    .orElse(null);
+        } catch (RestClientException e) {
+            log.error("OpenLibrary API failed for query '{}'.", userQuery, e);
+            return null;
         }
     }
 

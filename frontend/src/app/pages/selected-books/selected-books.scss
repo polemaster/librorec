@@ -129,7 +129,8 @@
   }
 
   &__title,
-  &__author {
+  &__author,
+  &__genre {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

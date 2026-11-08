@@ -1,6 +1,7 @@
 package dev.polemaster.librorec.service;
 
 import dev.polemaster.librorec.dto.BookRequest;
+import dev.polemaster.librorec.dto.BookSearchApi;
 import dev.polemaster.librorec.dto.LLMResponse;
 import dev.polemaster.librorec.dto.RecommendationMethod;
 import dev.polemaster.librorec.dto.RecommendationResponse;
@@ -34,7 +35,10 @@ public class RecommendationService {
         this.bookService = bookService;
     }
 
-    public List<RecommendationResponse> getRecommendations(List<BookRequest> books, RecommendationMethod method) {
+    public List<RecommendationResponse> getRecommendations(
+            List<BookRequest> books,
+            RecommendationMethod method,
+            BookSearchApi api) {
         if (books.isEmpty()) return List.of();
 
         String booksText = objectMapper.writeValueAsString(books);
@@ -59,8 +63,8 @@ public class RecommendationService {
         List<RecommendationResponse> bookResponses = new ArrayList<>();
         for (LLMResponse.LLMBookResponse book: response.books()) {
             String author = (book.authors() != null && !book.authors().isEmpty() ) ? book.authors().getFirst() : "";
-            String hardcoverQuery = book.title() + " " + author;
-            RecommendationResponse recommendationResponse = bookService.searchBestMatchBook(hardcoverQuery);
+            String searchQuery = book.title() + " " + author;
+            RecommendationResponse recommendationResponse = bookService.searchBestMatchBook(searchQuery, api);
             if (recommendationResponse != null)
                 bookResponses.add(recommendationResponse);
         }

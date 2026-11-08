@@ -15,8 +15,8 @@ export class SelectedBooks {
   readonly selectedBooks = this.bookService.selectedBooks;
   readonly selectedBooksCount = this.bookService.selectedBooksCount;
 
-  removeBook(slug: string): void {
-    this.bookService.removeBook(slug);
+  removeBook(id: string): void {
+    this.bookService.removeBook(id);
   }
 
   clearAllBooks(): void {

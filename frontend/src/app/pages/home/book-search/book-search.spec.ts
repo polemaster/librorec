@@ -13,7 +13,7 @@ describe('BookSearch', () => {
 
   const mockBooks: Book[] = [
     {
-      slug: '1984',
+      id: '1984',
       title: '1984',
       releaseDate: '1949-06-08',
       coverImgUrl: 'https://assets.hardcover.app/cover-1984.jpg',
@@ -23,7 +23,7 @@ describe('BookSearch', () => {
       tags: ['totalitarianism'],
     },
     {
-      slug: 'animal-farm',
+      id: 'animal-farm',
       title: 'Animal Farm',
       releaseDate: null,
       coverImgUrl: null,
@@ -45,7 +45,9 @@ describe('BookSearch', () => {
             selectedBooks: signal<Book[]>(mockBooks),
             selectedBooksCount: signal(2),
             selectedMethod: signal('GEMINI'),
+            selectedSearchApi: signal('HARDCOVER'),
             setSelectedMethod: vi.fn(),
+            setSelectedSearchApi: vi.fn(),
             fetchRecommendations: vi.fn(),
             addBook: vi.fn(),
             removeBook: vi.fn(),
@@ -74,27 +76,13 @@ describe('BookSearch', () => {
     expect(recBtn.textContent?.trim()).toBe('Recommendations');
 
     recBtn.click();
-    expect(bookService.fetchRecommendations).toHaveBeenCalledWith(mockBooks, 'GEMINI');
+    expect(bookService.fetchRecommendations).toHaveBeenCalledWith(mockBooks);
   });
 
-  it('should render recommendation method dropdown with Gemini and OpenRouter options and update selectedMethod', () => {
+  it('should not render recommendation method dropdown inside search box', () => {
     fixture.detectChanges();
-    const selectEl = fixture.nativeElement.querySelector(
-      '.search-box__method-select',
-    ) as HTMLSelectElement;
-    expect(selectEl).toBeTruthy();
-
-    const options = Array.from(selectEl.querySelectorAll('option'));
-    expect(options.map((o) => o.value)).toEqual(['GEMINI', 'OPENROUTER']);
-    expect(options.map((o) => o.textContent?.trim())).toEqual(['Gemini', 'OpenRouter']);
-    expect(component.selectedMethod()).toBe('GEMINI');
-
-    selectEl.value = 'OPENROUTER';
-    selectEl.dispatchEvent(new Event('change'));
-    fixture.detectChanges();
-
-    expect(component.selectedMethod()).toBe('OPENROUTER');
-    expect(bookService.setSelectedMethod).toHaveBeenCalledWith('OPENROUTER');
+    const selectEl = fixture.nativeElement.querySelector('.search-box__method-select');
+    expect(selectEl).toBeFalsy();
   });
 
   it('should search books on manual submit', () => {
@@ -207,7 +195,7 @@ describe('BookSearch', () => {
   });
 
   it('should display the text "Added" when book is selected and toggle removal on click', () => {
-    vi.mocked(bookService.isBookSelected).mockImplementation((slug) => slug === '1984');
+    vi.mocked(bookService.isBookSelected).mockImplementation((id) => id === '1984');
 
     component.searchQuery.set('Orwell');
     component.onSearchSubmit();

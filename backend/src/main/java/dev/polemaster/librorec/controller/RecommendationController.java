@@ -1,6 +1,7 @@
 package dev.polemaster.librorec.controller;
 
 import dev.polemaster.librorec.dto.BookRequest;
+import dev.polemaster.librorec.dto.BookSearchApi;
 import dev.polemaster.librorec.dto.RecommendationMethod;
 import dev.polemaster.librorec.dto.RecommendationResponse;
 import dev.polemaster.librorec.service.RecommendationService;
@@ -19,7 +20,8 @@ public class RecommendationController {
     @PostMapping
     public List<RecommendationResponse> getRecommendations(
             @RequestParam(defaultValue = "GEMINI") RecommendationMethod method,
+            @RequestParam(defaultValue = "HARDCOVER") BookSearchApi api,
             @RequestBody List<@Valid BookRequest> books) {
-        return recommendationService.getRecommendations(books, method);
+        return recommendationService.getRecommendations(books, method, api);
     }
 }

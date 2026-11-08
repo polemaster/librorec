@@ -1,6 +1,7 @@
 package dev.polemaster.librorec.controller;
 
 import dev.polemaster.librorec.dto.BookResponse;
+import dev.polemaster.librorec.dto.BookSearchApi;
 import dev.polemaster.librorec.service.BookService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,7 +18,9 @@ public class BookController {
     private final BookService bookService;
 
     @GetMapping("/search")
-    public List<BookResponse> searchBooks(@RequestParam String query) {
-        return bookService.searchTopFiveBooks(query);
+    public List<BookResponse> searchBooks(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "HARDCOVER") BookSearchApi api) {
+        return bookService.searchTopFiveBooks(query, api);
     }
 }

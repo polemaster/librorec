@@ -34,8 +34,88 @@
     </nav>
 
     <div class="header__authentication flex-center">
+      <button
+        type="button"
+        class="header__btn header__btn--settings flex-center"
+        (click)="openSettings()"
+        aria-label="Open settings"
+        title="Settings"
+      >
+        <app-icon name="settings" size="1.8rem"></app-icon>
+      </button>
       <a class="header__btn header__btn--login" href="#">Log In</a>
       <a class="header__btn header__btn--signup" href="#">Sign Up</a>
     </div>
   </div>
 </header>
+
+@if (isSettingsOpen()) {
+  <div
+    class="settings-modal-backdrop flex-center"
+    (click)="onBackdropClick($event)"
+    role="presentation"
+  >
+    <div
+      class="settings-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Settings"
+    >
+      <div class="settings-modal__header flex-between">
+        <div class="settings-modal__title-group">
+          <div class="settings-modal__icon-badge flex-center" aria-hidden="true">
+            <app-icon name="settings" size="2rem"></app-icon>
+          </div>
+          <div>
+            <h2 class="settings-modal__title">Settings</h2>
+            <p class="settings-modal__subtitle">Configure AI model and book catalog source</p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="settings-modal__close-btn flex-center"
+          (click)="closeSettings()"
+          aria-label="Close settings"
+          title="Close"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="settings-modal__body">
+        <div class="settings-modal__group">
+          <div class="settings-modal__label-group">
+            <span class="settings-modal__label">Recommendation Method</span>
+            <span class="settings-modal__hint">
+              Choose the AI provider used to generate book recommendations
+            </span>
+          </div>
+          <app-dropdown
+            class="settings-modal__method-dropdown"
+            [options]="recommendationMethods"
+            [value]="selectedMethod()"
+            ariaLabel="Recommendation method"
+            (valueChange)="onMethodSelect($event)"
+          />
+        </div>
+
+        <div class="settings-modal__group">
+          <div class="settings-modal__label-group">
+            <span class="settings-modal__label">Book Search API</span>
+            <span class="settings-modal__hint">
+              Select the catalog used for searching books and fetching details
+            </span>
+          </div>
+          <app-dropdown
+            class="settings-modal__api-dropdown"
+            [options]="bookSearchApis"
+            [value]="selectedSearchApi()"
+            ariaLabel="Book search API"
+            (valueChange)="onSearchApiSelect($event)"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+}
