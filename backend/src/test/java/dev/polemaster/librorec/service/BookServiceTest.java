@@ -12,12 +12,14 @@ import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
 class BookServiceTest {
     private static final String QUERY = "way of kings";
+    private static final String FIELDS = "key,title,author_name,first_publish_year,cover_i,subject";
 
     private static final String VALID_BOOK_HIT = """
             {
@@ -101,7 +103,7 @@ class BookServiceTest {
         expectHardcoverRequest(QUERY, 10)
                 .andRespond(withServerError());
 
-        mockServer.expect(requestToUriTemplate("https://openlibrary.org/search.json?q={query}", QUERY))
+        mockServer.expect(requestToUriTemplate("https://openlibrary.org/search.json?q={query}&fields={fields}&limit=10", QUERY, FIELDS))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess());
 
@@ -149,6 +151,9 @@ class BookServiceTest {
         expectHardcoverRequest(QUERY, 6)
                 .andRespond(withServerError());
 
+        expectOpenLibraryRequest(QUERY, 6)
+                .andRespond(withServerError());
+
         RecommendationResponse response = bookService.searchBestMatchBook(QUERY);
 
         assertNull(response);
@@ -162,6 +167,16 @@ class BookServiceTest {
                 .andExpect(header("Content-Type", "application/json"))
                 .andExpect(jsonPath("$.variables.searchTerm").value(query))
                 .andExpect(jsonPath("$.variables.limit").value(expectedLimit));
+    }
+
+    private ResponseActions expectOpenLibraryRequest(String query, int expectedLimit) {
+        return mockServer.expect(requestToUriTemplate(
+                        "https://openlibrary.org/search.json?q={q}&fields={fields}&limit={limit}",
+                        query,
+                        "key,title,author_name,first_publish_year,cover_i,subject",
+                        expectedLimit))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("User-Agent", "MyBookApp/1.0 (contact@example.com)"));
     }
 
     private static String hardcoverResponseJson(String hitsJson) {
