@@ -12,7 +12,6 @@ import {
 import { BookService } from '../../../core/services/book.service';
 import {
   Book,
-  RECOMMENDATION_METHODS,
   RecommendationMethod,
   RecommendationMethodOption,
 } from '../../../core/models/book.model';
@@ -29,10 +28,6 @@ export type { RecommendationMethod, RecommendationMethodOption };
 export class BookSearch implements OnDestroy {
   protected readonly bookService = inject(BookService);
 
-  readonly recommendationMethods: RecommendationMethodOption[] = RECOMMENDATION_METHODS;
-  readonly selectedMethod = signal<RecommendationMethod>(
-    this.bookService.selectedMethod?.() ?? 'GEMINI',
-  );
   readonly searchQuery = signal('');
   readonly searchResults = signal<Book[]>([]);
   readonly isLoading = signal(false);
@@ -85,16 +80,8 @@ export class BookSearch implements OnDestroy {
     this.searchSubject.next(value);
   }
 
-  onMethodChange(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value as RecommendationMethod;
-    this.selectedMethod.set(value);
-    this.bookService.setSelectedMethod?.(value);
-  }
-
   onGetRecommendations(): void {
-    const method = this.selectedMethod();
-    this.bookService.setSelectedMethod?.(method);
-    this.bookService.fetchRecommendations?.(this.bookService.selectedBooks(), method);
+    this.bookService.fetchRecommendations?.(this.bookService.selectedBooks());
   }
 
   onSearchSubmit(): void {
@@ -125,8 +112,8 @@ export class BookSearch implements OnDestroy {
   }
 
   toggleBook(book: Book): void {
-    if (this.isBookSelected(book.slug)) {
-      this.bookService.removeBook(book.slug);
+    if (this.isBookSelected(book.id)) {
+      this.bookService.removeBook(book.id);
     } else {
       this.bookService.addBook(book);
     }
@@ -136,36 +123,36 @@ export class BookSearch implements OnDestroy {
     this.bookService.addBook(book);
   }
 
-  onRemoveBook(slug: string): void {
-    this.bookService.removeBook(slug);
+  onRemoveBook(id: string): void {
+    this.bookService.removeBook(id);
   }
 
-  isBookSelected(slug: string): boolean {
-    return this.bookService.isBookSelected(slug);
+  isBookSelected(id: string): boolean {
+    return this.bookService.isBookSelected(id);
   }
 
-  onImageLoad(slug: string): void {
+  onImageLoad(id: string): void {
     this.loadedImages.update((prev) => {
       const next = new Set(prev);
-      next.add(slug);
+      next.add(id);
       return next;
     });
   }
 
-  onImageError(slug: string): void {
+  onImageError(id: string): void {
     this.errorImages.update((prev) => {
       const next = new Set(prev);
-      next.add(slug);
+      next.add(id);
       return next;
     });
   }
 
-  isImageLoaded(slug: string): boolean {
-    return this.loadedImages().has(slug);
+  isImageLoaded(id: string): boolean {
+    return this.loadedImages().has(id);
   }
 
-  isImageError(slug: string): boolean {
-    return this.errorImages().has(slug);
+  isImageError(id: string): boolean {
+    return this.errorImages().has(id);
   }
 
   formatAuthors(authors: string[] | null | undefined): string | null {
@@ -186,9 +173,9 @@ export class BookSearch implements OnDestroy {
 
   private updateResults(books: Book[]): void {
     const safeBooks = books ?? [];
-    const currentSlugs = new Set(safeBooks.map((b) => b.slug));
-    this.loadedImages.update((prev) => new Set([...prev].filter((s) => currentSlugs.has(s))));
-    this.errorImages.update((prev) => new Set([...prev].filter((s) => currentSlugs.has(s))));
+    const currentIds = new Set(safeBooks.map((b) => b.id));
+    this.loadedImages.update((prev) => new Set([...prev].filter((id) => currentIds.has(id))));
+    this.errorImages.update((prev) => new Set([...prev].filter((id) => currentIds.has(id))));
     this.searchResults.set(safeBooks);
   }
 }

@@ -3,15 +3,29 @@ export type RecommendationMethod = 'GEMINI' | 'OPENROUTER';
 export interface RecommendationMethodOption {
   value: RecommendationMethod;
   label: string;
+  description?: string;
 }
 
 export const RECOMMENDATION_METHODS: RecommendationMethodOption[] = [
-  { value: 'GEMINI', label: 'Gemini' },
-  { value: 'OPENROUTER', label: 'OpenRouter' },
+  { value: 'GEMINI', label: 'Gemini', description: 'Google Gemini AI model' },
+  { value: 'OPENROUTER', label: 'OpenRouter', description: 'OpenRouter LLM gateway' },
+];
+
+export type BookSearchApi = 'HARDCOVER' | 'OPENLIBRARY';
+
+export interface BookSearchApiOption {
+  value: BookSearchApi;
+  label: string;
+  description?: string;
+}
+
+export const BOOK_SEARCH_APIS: BookSearchApiOption[] = [
+  { value: 'HARDCOVER', label: 'Hardcover', description: 'Rich metadata & book descriptions' },
+  { value: 'OPENLIBRARY', label: 'OpenLibrary', description: 'Open community book catalog' },
 ];
 
 export interface Book {
-  slug: string;
+  id: string;
   title: string;
   releaseDate: string | null;
   coverImgUrl: string | null;
@@ -23,7 +37,7 @@ export interface Book {
 }
 
 export interface BookRequest {
-  slug: string;
+  id: string;
   title: string;
   releaseDate: string | null;
   authors: string[];
@@ -33,7 +47,7 @@ export interface BookRequest {
 }
 
 export interface RecommendationResponse {
-  slug: string;
+  id: string;
   title: string;
   releaseDate: string | null;
   coverImgUrl: string | null;
@@ -42,4 +56,3 @@ export interface RecommendationResponse {
   authors: string[];
   genres: string[];
 }
-

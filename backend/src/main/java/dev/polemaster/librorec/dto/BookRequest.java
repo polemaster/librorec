@@ -6,7 +6,7 @@ import java.util.List;
 
 
 public record BookRequest(
-        @NotBlank String slug,
+        @NotBlank String id,
         @NotBlank String title,
         String releaseDate,
         List<String> authors, List<String> genres,

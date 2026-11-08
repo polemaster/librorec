@@ -1,6 +1,7 @@
 package dev.polemaster.librorec.service;
 
 import dev.polemaster.librorec.dto.BookResponse;
+import dev.polemaster.librorec.dto.BookSearchApi;
 import dev.polemaster.librorec.dto.RecommendationResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,7 +52,7 @@ class BookServiceTest {
 
     @Test
     void searchTopFiveBooksShouldReturnEmptyListOnEmptyQuery() {
-        List<BookResponse> list = bookService.searchTopFiveBooks("");
+        List<BookResponse> list = bookService.searchTopFiveBooks("", BookSearchApi.HARDCOVER);
         assertEquals(List.of(), list);
         mockServer.verify();
     }
@@ -63,7 +64,7 @@ class BookServiceTest {
         expectHardcoverRequest(QUERY, 10)
                 .andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
-        List<BookResponse> list = bookService.searchTopFiveBooks(QUERY);
+        List<BookResponse> list = bookService.searchTopFiveBooks(QUERY, BookSearchApi.HARDCOVER);
 
         BookResponse expected = new BookResponse(
                 "the-way-of-kings",
@@ -91,7 +92,7 @@ class BookServiceTest {
         expectHardcoverRequest(QUERY, 10)
                 .andRespond(withSuccess(hardcoverResponseJson(hits), MediaType.APPLICATION_JSON));
 
-        List<BookResponse> list = bookService.searchTopFiveBooks(QUERY);
+        List<BookResponse> list = bookService.searchTopFiveBooks(QUERY, BookSearchApi.HARDCOVER);
 
         assertEquals(1, list.size());
         assertEquals("The Way of Kings", list.getFirst().title());
@@ -107,7 +108,7 @@ class BookServiceTest {
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess());
 
-        List<BookResponse> books = bookService.searchTopFiveBooks(QUERY);
+        List<BookResponse> books = bookService.searchTopFiveBooks(QUERY, BookSearchApi.HARDCOVER);
 
         assertEquals(List.of(), books);
         mockServer.verify();
@@ -115,7 +116,7 @@ class BookServiceTest {
 
     @Test
     void searchBestMatchBookShouldReturnNullOnEmptyQuery() {
-        RecommendationResponse response = bookService.searchBestMatchBook("");
+        RecommendationResponse response = bookService.searchBestMatchBook("", BookSearchApi.HARDCOVER);
         assertNull(response);
         mockServer.verify();
     }
@@ -130,7 +131,7 @@ class BookServiceTest {
         expectHardcoverRequest(QUERY, 6)
                 .andRespond(withSuccess(hardcoverResponseJson(hits), MediaType.APPLICATION_JSON));
 
-        RecommendationResponse response = bookService.searchBestMatchBook(QUERY);
+        RecommendationResponse response = bookService.searchBestMatchBook(QUERY, BookSearchApi.HARDCOVER);
 
         RecommendationResponse expected = new RecommendationResponse(
                 "the-way-of-kings",
@@ -154,9 +155,82 @@ class BookServiceTest {
         expectOpenLibraryRequest(QUERY, 6)
                 .andRespond(withServerError());
 
-        RecommendationResponse response = bookService.searchBestMatchBook(QUERY);
+        RecommendationResponse response = bookService.searchBestMatchBook(QUERY, BookSearchApi.HARDCOVER);
 
         assertNull(response);
+        mockServer.verify();
+    }
+
+    @Test
+    void searchTopFiveBooksShouldQueryOpenLibraryDirectlyWhenOpenLibraryApiSelected() {
+        String openLibraryJson = """
+                {
+                  "docs": [
+                    {
+                      "key": "/works/OL15358691W",
+                      "title": "The Way of Kings",
+                      "author_name": ["Brandon Sanderson"],
+                      "first_publish_year": "2010",
+                      "cover_i": 12345,
+                      "subject": ["series:The_Stormlight_Archive", "Fantasy", "Epic"]
+                    }
+                  ]
+                }
+                """;
+
+        expectOpenLibraryRequest(QUERY, 10)
+                .andRespond(withSuccess(openLibraryJson, MediaType.APPLICATION_JSON));
+
+        List<BookResponse> list = bookService.searchTopFiveBooks(QUERY, BookSearchApi.OPENLIBRARY);
+
+        BookResponse expected = new BookResponse(
+                "OL15358691W",
+                "The Way of Kings",
+                "2010",
+                "https://covers.openlibrary.org/b/id/12345-L.jpg",
+                "The Stormlight Archive",
+                List.of("Brandon Sanderson"),
+                List.of(),
+                List.of(),
+                List.of("Fantasy", "Epic")
+        );
+        assertEquals(List.of(expected), list);
+        mockServer.verify();
+    }
+
+    @Test
+    void searchBestMatchBookShouldQueryOpenLibraryDirectlyWhenOpenLibraryApiSelected() {
+        String openLibraryJson = """
+                {
+                  "docs": [
+                    {
+                      "key": "/works/OL15358691W",
+                      "title": "The Way of Kings",
+                      "author_name": ["Brandon Sanderson"],
+                      "first_publish_year": "2010",
+                      "cover_i": 12345,
+                      "subject": ["series:The_Stormlight_Archive", "Fantasy", "Epic"]
+                    }
+                  ]
+                }
+                """;
+
+        expectOpenLibraryRequest(QUERY, 6)
+                .andRespond(withSuccess(openLibraryJson, MediaType.APPLICATION_JSON));
+
+        RecommendationResponse response = bookService.searchBestMatchBook(QUERY, BookSearchApi.OPENLIBRARY);
+
+        RecommendationResponse expected = new RecommendationResponse(
+                "OL15358691W",
+                "The Way of Kings",
+                "2010",
+                "https://covers.openlibrary.org/b/id/12345-L.jpg",
+                "The Stormlight Archive",
+                null,
+                List.of("Brandon Sanderson"),
+                List.of("Fantasy", "Epic")
+        );
+        assertEquals(expected, response);
         mockServer.verify();
     }
 

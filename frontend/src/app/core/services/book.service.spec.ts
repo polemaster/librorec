@@ -9,7 +9,7 @@ describe('BookService', () => {
   let httpTesting: HttpTestingController;
 
   const mockBook1: Book = {
-    slug: 'book-1',
+    id: 'book-1',
     title: 'Test Book 1',
     releaseDate: '2020-05-10',
     coverImgUrl: 'https://example.com/cover1.jpg',
@@ -20,7 +20,7 @@ describe('BookService', () => {
   };
 
   const mockBook2: Book = {
-    slug: 'book-2',
+    id: 'book-2',
     title: 'Test Book 2',
     releaseDate: null,
     coverImgUrl: null,
@@ -31,7 +31,7 @@ describe('BookService', () => {
   };
 
   const mockRecommendation: RecommendationResponse = {
-    slug: 'rec-book-1',
+    id: 'rec-book-1',
     title: 'Recommended Book 1',
     releaseDate: '2021-01-15',
     coverImgUrl: 'https://example.com/rec1.jpg',
@@ -58,17 +58,21 @@ describe('BookService', () => {
     httpTesting.verify();
   });
 
-  it('should be created with empty selected books and GEMINI as default method', () => {
+  it('should be created with empty selected books, GEMINI as default method, and HARDCOVER as default search API', () => {
     expect(service).toBeTruthy();
     expect(service.selectedBooks()).toEqual([]);
     expect(service.selectedBooksCount()).toBe(0);
     expect(service.selectedMethod()).toBe('GEMINI');
+    expect(service.selectedSearchApi()).toBe('HARDCOVER');
     expect(service.recommendedBooks()).toEqual([]);
   });
 
-  it('should update selected recommendation method', () => {
+  it('should update selected recommendation method and book search API', () => {
     service.setSelectedMethod('OPENROUTER');
     expect(service.selectedMethod()).toBe('OPENROUTER');
+
+    service.setSelectedSearchApi('OPENLIBRARY');
+    expect(service.selectedSearchApi()).toBe('OPENLIBRARY');
   });
 
   it('should add a book with all backend data to the global state', () => {
@@ -78,14 +82,14 @@ describe('BookService', () => {
     expect(service.isBookSelected('book-1')).toBe(true);
   });
 
-  it('should not add duplicate books with the same slug', () => {
+  it('should not add duplicate books with the same id', () => {
     service.addBook(mockBook1);
     service.addBook(mockBook1);
     expect(service.selectedBooks().length).toBe(1);
     expect(service.selectedBooksCount()).toBe(1);
   });
 
-  it('should remove a book by slug', () => {
+  it('should remove a book by id', () => {
     service.addBook(mockBook1);
     service.addBook(mockBook2);
     expect(service.selectedBooksCount()).toBe(2);
@@ -116,17 +120,26 @@ describe('BookService', () => {
     httpTesting.expectNone('/api/books/search?query=');
   });
 
-  it('should send HTTP GET request to /api/books/search with query param and return backend data', () => {
+  it('should send HTTP GET request to /api/books/search with query and api params and return backend data', () => {
     let results: Book[] | undefined;
     service.searchBooks('1984').subscribe((books) => {
       results = books;
     });
 
-    const req = httpTesting.expectOne('/api/books/search?query=1984');
+    const req = httpTesting.expectOne('/api/books/search?query=1984&api=HARDCOVER');
     expect(req.request.method).toBe('GET');
 
     req.flush([mockBook1]);
     expect(results).toEqual([mockBook1]);
+  });
+
+  it('should send selected search API param when OpenLibrary is selected', () => {
+    service.setSelectedSearchApi('OPENLIBRARY');
+    service.searchBooks('Dune').subscribe();
+
+    const req = httpTesting.expectOne('/api/books/search?query=Dune&api=OPENLIBRARY');
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
   });
 
   it('should propagate error and not fallback to mock data when server request fails', () => {
@@ -137,7 +150,7 @@ describe('BookService', () => {
       },
     });
 
-    const req = httpTesting.expectOne('/api/books/search?query=Orwell');
+    const req = httpTesting.expectOne('/api/books/search?query=Orwell&api=HARDCOVER');
     req.error(new ProgressEvent('Network error'));
 
     expect(errorReceived).toBe(true);
@@ -150,22 +163,24 @@ describe('BookService', () => {
     });
 
     expect(results).toEqual([]);
-    httpTesting.expectNone('/api/recommendations?method=GEMINI');
+    httpTesting.expectNone('/api/recommendations?method=GEMINI&api=HARDCOVER');
   });
 
-  it('should send HTTP POST request to /api/recommendations in BookRequest format with method param', () => {
+  it('should send HTTP POST request to /api/recommendations in BookRequest format with method and api params', () => {
     service.addBook(mockBook1);
 
     let results: RecommendationResponse[] | undefined;
-    service.getRecommendations(service.selectedBooks(), 'OPENROUTER').subscribe((recs) => {
-      results = recs;
-    });
+    service
+      .getRecommendations(service.selectedBooks(), 'OPENROUTER', 'OPENLIBRARY')
+      .subscribe((recs) => {
+        results = recs;
+      });
 
-    const req = httpTesting.expectOne('/api/recommendations?method=OPENROUTER');
+    const req = httpTesting.expectOne('/api/recommendations?method=OPENROUTER&api=OPENLIBRARY');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual([
       {
-        slug: 'book-1',
+        id: 'book-1',
         title: 'Test Book 1',
         releaseDate: '2020-05-10',
         authors: ['Author A'],
@@ -181,11 +196,11 @@ describe('BookService', () => {
 
   it('should store and remember recommended books in global state when fetchRecommendations is called', () => {
     service.addBook(mockBook1);
-    service.fetchRecommendations(service.selectedBooks(), 'GEMINI');
+    service.fetchRecommendations(service.selectedBooks(), 'GEMINI', 'HARDCOVER');
 
     expect(service.isRecommendationsLoading()).toBe(true);
 
-    const req = httpTesting.expectOne('/api/recommendations?method=GEMINI');
+    const req = httpTesting.expectOne('/api/recommendations?method=GEMINI&api=HARDCOVER');
     expect(req.request.method).toBe('POST');
     req.flush([mockRecommendation]);
 

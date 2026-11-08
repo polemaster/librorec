@@ -3,9 +3,8 @@ import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { BookService } from '../../core/services/book.service';
 import {
-  RECOMMENDATION_METHODS,
+  BookSearchApi,
   RecommendationMethod,
-  RecommendationMethodOption,
   RecommendationResponse,
 } from '../../core/models/book.model';
 import { Icon } from '../../shared/icon/icon';
@@ -30,9 +29,12 @@ export class Recommendations implements OnDestroy {
   readonly selectedBooks = this.bookService.selectedBooks;
   readonly selectedBooksCount = this.bookService.selectedBooksCount;
 
-  readonly recommendationMethods: RecommendationMethodOption[] = RECOMMENDATION_METHODS;
-  readonly selectedMethod = signal<RecommendationMethod>(
-    this.bookService.selectedMethod?.() ?? 'GEMINI',
+  readonly selectedMethod = computed<RecommendationMethod>(() =>
+    this.bookService.selectedMethod ? this.bookService.selectedMethod() : 'GEMINI',
+  );
+
+  readonly selectedSearchApi = computed<BookSearchApi>(() =>
+    this.bookService.selectedSearchApi ? this.bookService.selectedSearchApi() : 'HARDCOVER',
   );
 
   readonly sortOptions: SortOption[] = [
@@ -121,10 +123,10 @@ export class Recommendations implements OnDestroy {
     this.errorImages.set(new Set());
 
     const method = this.selectedMethod();
-    this.bookService.setSelectedMethod?.(method);
+    const api = this.selectedSearchApi();
 
     if (this.bookService.fetchRecommendations) {
-      this.bookService.fetchRecommendations(books, method);
+      this.bookService.fetchRecommendations(books, method, api);
       return;
     }
 
@@ -132,7 +134,7 @@ export class Recommendations implements OnDestroy {
     this.localIsLoading.set(true);
     this.localErrorMessage.set(null);
 
-    const request$ = this.bookService.getRecommendations?.(books, method);
+    const request$ = this.bookService.getRecommendations?.(books, method, api);
     if (!request$) {
       this.localIsLoading.set(false);
       return;
@@ -153,12 +155,6 @@ export class Recommendations implements OnDestroy {
     });
   }
 
-  onMethodChange(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value as RecommendationMethod;
-    this.selectedMethod.set(value);
-    this.bookService.setSelectedMethod?.(value);
-  }
-
   onSortChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value as RecommendationSort;
     this.sortBy.set(value);
@@ -177,40 +173,56 @@ export class Recommendations implements OnDestroy {
   }
 
   getTopGenres(genres: string[] | null | undefined): string[] {
-    return (genres ?? []).slice(0, 3);
+    return (genres ?? []).filter((g) => !!g && g.trim().length > 0).slice(0, 3);
   }
 
-  getHardcoverUrl(slug: string): string {
-    return `https://hardcover.app/books/${slug}`;
+  isOpenLibraryBook(book: RecommendationResponse | string): boolean {
+    const id = typeof book === 'string' ? book : book.id;
+    return this.selectedSearchApi() === 'OPENLIBRARY' || /^OL\d+[MW]$/i.test(id);
   }
 
-  openBookPage(slug: string, event?: Event): void {
+  getHardcoverUrl(id: string): string {
+    return `https://hardcover.app/books/${id}`;
+  }
+
+  getOpenLibraryUrl(id: string): string {
+    return `https://openlibrary.org/works/${id}`;
+  }
+
+  getBookUrl(book: RecommendationResponse | string): string {
+    const id = typeof book === 'string' ? book : book.id;
+    return this.isOpenLibraryBook(book)
+      ? this.getOpenLibraryUrl(id)
+      : this.getHardcoverUrl(id);
+  }
+
+  openBookPage(book: RecommendationResponse | string, event?: Event): void {
     event?.preventDefault();
-    window.open(this.getHardcoverUrl(slug), '_blank', 'noopener,noreferrer');
+    window.open(this.getBookUrl(book), '_blank', 'noopener,noreferrer');
   }
 
-  onImageLoad(slug: string): void {
+  onImageLoad(id: string): void {
     this.loadedImages.update((prev) => {
       const next = new Set(prev);
-      next.add(slug);
+      next.add(id);
       return next;
     });
   }
 
-  onImageError(slug: string): void {
+  onImageError(id: string): void {
     this.errorImages.update((prev) => {
       const next = new Set(prev);
-      next.add(slug);
+      next.add(id);
       return next;
     });
   }
 
-  isImageLoaded(slug: string): boolean {
-    return this.loadedImages().has(slug);
+  isImageLoaded(id: string): boolean {
+    return this.loadedImages().has(id);
   }
 
-  isImageError(slug: string): boolean {
-    return this.errorImages().has(slug);
+  isImageError(id: string): boolean {
+    return this.errorImages().has(id);
   }
 
   formatAuthors(authors: string[] | null | undefined): string | null {

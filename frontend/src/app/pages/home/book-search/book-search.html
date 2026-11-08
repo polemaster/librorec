@@ -44,21 +44,21 @@
           </div>
         } @else {
           <ul class="results-list" role="list">
-            @for (book of searchResults(); track book.slug) {
+            @for (book of searchResults(); track book.id) {
               <li
                 class="book-card flex-between"
-                [class.book-card--selected]="isBookSelected(book.slug)"
+                [class.book-card--selected]="isBookSelected(book.id)"
                 (click)="toggleBook(book)"
                 tabindex="0"
                 role="button"
                 (keydown.enter)="toggleBook(book)"
                 (keydown.space)="$event.preventDefault(); toggleBook(book)"
-                [attr.aria-label]="(isBookSelected(book.slug) ? 'Remove ' : 'Select ') + (book.title || 'book')"
+                [attr.aria-label]="(isBookSelected(book.id) ? 'Remove ' : 'Select ') + (book.title || 'book')"
               >
                 <div class="book-card__left">
-                  @if (book.coverImgUrl && !isImageError(book.slug)) {
+                  @if (book.coverImgUrl && !isImageError(book.id)) {
                     <div class="book-card__cover flex-center">
-                      @if (!isImageLoaded(book.slug)) {
+                      @if (!isImageLoaded(book.id)) {
                         <span
                           class="spinner book-card__cover-spinner"
                           role="status"
@@ -67,11 +67,11 @@
                       }
                       <img
                         class="book-card__cover-img"
-                        [class.book-card__cover-img--loading]="!isImageLoaded(book.slug)"
+                        [class.book-card__cover-img--loading]="!isImageLoaded(book.id)"
                         [src]="book.coverImgUrl"
                         [alt]="(book.title || 'Book') + ' cover'"
-                        (load)="onImageLoad(book.slug)"
-                        (error)="onImageError(book.slug)"
+                        (load)="onImageLoad(book.id)"
+                        (error)="onImageError(book.id)"
                       />
                     </div>
                   }
@@ -80,39 +80,30 @@
                     @if (book.title) {
                       <h4 class="book-card__title">{{ book.title }}</h4>
                     }
-                    <div class="book-card__meta">
-                      @if (formatAuthors(book.authors); as authorsText) {
-                        <span class="book-card__author">by <strong>{{ authorsText }}</strong></span>
-                      }
-                      @if (getReleaseYear(book.releaseDate); as releaseYear) {
-                        <span class="book-card__pill">{{ releaseYear }}</span>
-                      }
-                    </div>
+                    @if (formatAuthors(book.authors) || getReleaseYear(book.releaseDate)) {
+                      <div class="book-card__meta">
+                        @if (formatAuthors(book.authors); as authorsText) {
+                          <span class="book-card__author">by <strong>{{ authorsText }}</strong></span>
+                        }
+                        @if (getReleaseYear(book.releaseDate); as releaseYear) {
+                          <span class="book-card__pill">{{ releaseYear }}</span>
+                        }
+                      </div>
+                    }
                   </div>
                 </div>
 
-                <div class="book-card__action">
-                  @if (isBookSelected(book.slug)) {
+                @if (isBookSelected(book.id)) {
+                  <div class="book-card__action">
                     <span class="book-card__status">Added</span>
-                  }
-                </div>
+                  </div>
+                }
               </li>
             }
           </ul>
         }
       }
     </div>
-
-    <select
-      class="search-box__method-select"
-      [value]="selectedMethod()"
-      (change)="onMethodChange($event)"
-      aria-label="Recommendation method"
-    >
-      @for (method of recommendationMethods; track method.value) {
-        <option [value]="method.value">{{ method.label }}</option>
-      }
-    </select>
 
     <a
       routerLink="/recommendations"

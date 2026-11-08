@@ -2,7 +2,7 @@ import { Book } from '../models/book.model';
 
 export const MOCK_BOOKS: Book[] = [
   {
-    slug: '1984',
+    id: '1984',
     title: '1984',
     releaseDate: '1949-06-08',
     coverImgUrl: null,
@@ -12,7 +12,7 @@ export const MOCK_BOOKS: Book[] = [
     tags: ['totalitarianism', 'surveillance'],
   },
   {
-    slug: 'animal-farm',
+    id: 'animal-farm',
     title: 'Animal Farm',
     releaseDate: '1945-08-17',
     coverImgUrl: null,
@@ -22,7 +22,7 @@ export const MOCK_BOOKS: Book[] = [
     tags: ['allegory', 'politics'],
   },
   {
-    slug: 'to-kill-a-mockingbird',
+    id: 'to-kill-a-mockingbird',
     title: 'To Kill a Mockingbird',
     releaseDate: '1960-07-11',
     coverImgUrl: null,
@@ -32,7 +32,7 @@ export const MOCK_BOOKS: Book[] = [
     tags: ['justice', 'american-south'],
   },
   {
-    slug: 'the-great-gatsby',
+    id: 'the-great-gatsby',
     title: 'The Great Gatsby',
     releaseDate: '1925-04-10',
     coverImgUrl: null,
@@ -42,7 +42,7 @@ export const MOCK_BOOKS: Book[] = [
     tags: ['jazz-age', 'american-dream'],
   },
   {
-    slug: 'pride-and-prejudice',
+    id: 'pride-and-prejudice',
     title: 'Pride and Prejudice',
     releaseDate: '1813-01-28',
     coverImgUrl: null,
@@ -52,7 +52,7 @@ export const MOCK_BOOKS: Book[] = [
     tags: ['regency', 'manners'],
   },
   {
-    slug: 'the-hobbit',
+    id: 'the-hobbit',
     title: 'The Hobbit',
     releaseDate: '1937-09-21',
     coverImgUrl: null,
@@ -62,7 +62,7 @@ export const MOCK_BOOKS: Book[] = [
     tags: ['middle-earth', 'quest'],
   },
   {
-    slug: 'the-fellowship-of-the-ring',
+    id: 'the-fellowship-of-the-ring',
     title: 'The Fellowship of the Ring',
     releaseDate: '1954-07-29',
     coverImgUrl: null,
@@ -72,7 +72,7 @@ export const MOCK_BOOKS: Book[] = [
     tags: ['middle-earth', 'epic-fantasy'],
   },
   {
-    slug: 'dune',
+    id: 'dune',
     title: 'Dune',
     releaseDate: '1965-08-01',
     coverImgUrl: null,
@@ -82,7 +82,7 @@ export const MOCK_BOOKS: Book[] = [
     tags: ['space-opera', 'ecology'],
   },
   {
-    slug: 'brave-new-world',
+    id: 'brave-new-world',
     title: 'Brave New World',
     releaseDate: '1932-01-01',
     coverImgUrl: null,
@@ -92,7 +92,7 @@ export const MOCK_BOOKS: Book[] = [
     tags: ['future', 'society'],
   },
   {
-    slug: 'the-catcher-in-the-rye',
+    id: 'the-catcher-in-the-rye',
     title: 'The Catcher in the Rye',
     releaseDate: '1951-07-16',
     coverImgUrl: null,
@@ -102,7 +102,7 @@ export const MOCK_BOOKS: Book[] = [
     tags: ['youth', 'alienation'],
   },
   {
-    slug: 'crime-and-punishment',
+    id: 'crime-and-punishment',
     title: 'Crime and Punishment',
     releaseDate: '1866-01-01',
     coverImgUrl: null,
@@ -112,7 +112,7 @@ export const MOCK_BOOKS: Book[] = [
     tags: ['morality', 'guilt'],
   },
   {
-    slug: 'the-picture-of-dorian-gray',
+    id: 'the-picture-of-dorian-gray',
     title: 'The Picture of Dorian Gray',
     releaseDate: '1890-06-20',
     coverImgUrl: null,
@@ -122,7 +122,7 @@ export const MOCK_BOOKS: Book[] = [
     tags: ['vanity', 'gothic'],
   },
   {
-    slug: 'the-hitchhikers-guide-to-the-galaxy',
+    id: 'the-hitchhikers-guide-to-the-galaxy',
     title: "The Hitchhiker's Guide to the Galaxy",
     releaseDate: '1979-10-12',
     coverImgUrl: null,
@@ -132,7 +132,7 @@ export const MOCK_BOOKS: Book[] = [
     tags: ['space', 'humor'],
   },
   {
-    slug: 'fahrenheit-451',
+    id: 'fahrenheit-451',
     title: 'Fahrenheit 451',
     releaseDate: '1953-10-19',
     coverImgUrl: null,
@@ -142,7 +142,7 @@ export const MOCK_BOOKS: Book[] = [
     tags: ['censorship', 'books'],
   },
   {
-    slug: 'frankenstein',
+    id: 'frankenstein',
     title: 'Frankenstein',
     releaseDate: '1818-01-01',
     coverImgUrl: null,
@@ -152,7 +152,7 @@ export const MOCK_BOOKS: Book[] = [
     tags: ['science', 'monster'],
   },
   {
-    slug: 'project-hail-mary',
+    id: 'project-hail-mary',
     title: 'Project Hail Mary',
     releaseDate: '2021-05-04',
     coverImgUrl: null,

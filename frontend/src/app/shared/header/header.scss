@@ -58,6 +58,17 @@
     transition: all 0.2s ease;
     cursor: pointer;
 
+    &--settings {
+      padding: 0.6rem;
+      background-color: transparent;
+      color: var(--color-text);
+
+      &:hover {
+        background-color: var(--color-background-highlight);
+        color: var(--color-primary);
+      }
+    }
+
     &--login {
       background-color: transparent;
       color: var(--color-text);
@@ -138,5 +149,136 @@
     text-decoration: none;
     user-select: none;
     pointer-events: none;
+  }
+}
+
+.settings-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 50%);
+  backdrop-filter: blur(4px);
+  padding: 1.6rem;
+  z-index: 1000;
+  animation: modal-backdrop-fade 0.18s ease;
+}
+
+.settings-modal {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  background: var(--color-background-surface);
+  border: 1px solid var(--color-background-highlight);
+  border-radius: 1.8rem;
+  padding: 2.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  box-shadow:
+    0 20px 40px -12px rgb(0 0 0 / 22%),
+    0 4px 16px -4px rgb(0 0 0 / 10%);
+  animation: modal-slide-up 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &__header {
+    align-items: flex-start;
+    gap: 1.2rem;
+    padding-bottom: 1.6rem;
+    border-bottom: 1px solid var(--color-background-highlight);
+  }
+
+  &__title-group {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  &__icon-badge {
+    width: 4.2rem;
+    height: 4.2rem;
+    border-radius: 1.2rem;
+    background: color-mix(in srgb, var(--color-primary), transparent 88%);
+    color: var(--color-primary);
+    flex-shrink: 0;
+  }
+
+  &__title {
+    font-size: var(--text-xl);
+    color: var(--color-text);
+  }
+
+  &__subtitle {
+    font-size: var(--text-xs);
+    color: color-mix(in srgb, var(--color-text), transparent 40%);
+    margin-top: 0.2rem;
+  }
+
+  &__close-btn {
+    width: 3.2rem;
+    height: 3.2rem;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-background);
+    color: color-mix(in srgb, var(--color-text), transparent 30%);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+
+    &:hover {
+      background: var(--color-background-highlight);
+      color: var(--color-text);
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+  }
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  &__label-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  &__label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  &__hint {
+    font-size: var(--text-xs);
+    color: color-mix(in srgb, var(--color-text), transparent 42%);
+    line-height: 1.4;
+  }
+}
+
+@keyframes modal-backdrop-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
