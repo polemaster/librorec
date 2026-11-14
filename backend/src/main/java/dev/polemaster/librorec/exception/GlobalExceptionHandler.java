@@ -23,10 +23,7 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @NullMarked
@@ -48,11 +45,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         Map<String, List<String>> errors = new LinkedHashMap<>();
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
             errors.computeIfAbsent(fieldError.getField(), k -> new ArrayList<>())
-                    .add(fieldError.getDefaultMessage());
+                    .add(Objects.requireNonNullElse(fieldError.getDefaultMessage(), "Invalid value"));
         }
         for (ObjectError globalError : ex.getBindingResult().getGlobalErrors()) {
             errors.computeIfAbsent(globalError.getObjectName(), k -> new ArrayList<>())
-                    .add(globalError.getDefaultMessage());
+                    .add(Objects.requireNonNullElse(globalError.getDefaultMessage(), "Validation error"));
         }
         problem.setProperty("errors", errors);
 
@@ -79,10 +76,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             for (MessageSourceResolvable error : result.getResolvableErrors()) {
                 if (error instanceof FieldError fieldError) {
                     errors.computeIfAbsent(key + "." + fieldError.getField(), k -> new ArrayList<>())
-                            .add(fieldError.getDefaultMessage());
+                            .add(Objects.requireNonNullElse(fieldError.getDefaultMessage(), "Invalid value"));
                 } else {
                     errors.computeIfAbsent(key, k -> new ArrayList<>())
-                            .add(error.getDefaultMessage());
+                            .add(Objects.requireNonNullElse(error.getDefaultMessage(), "Validation error"));
                 }
             }
         });
