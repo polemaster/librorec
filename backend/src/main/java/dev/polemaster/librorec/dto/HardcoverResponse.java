@@ -1,5 +1,6 @@
 package dev.polemaster.librorec.dto;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public record HardcoverResponse(Data data) {
@@ -19,7 +20,7 @@ public record HardcoverResponse(Data data) {
             List<String> genres,
             Image image,
             List<String> moods,
-            String release_date,
+            LocalDate release_date,
             String slug,
             List<String> tags,
             String title,
@@ -42,6 +43,10 @@ public record HardcoverResponse(Data data) {
 
         public String seriesName() {
             return (featured_series != null) ? (featured_series.series != null ? featured_series.series.name : null) : null;
+        }
+
+        public String releaseDate() {
+            return release_date != null ? release_date.toString() : null;
         }
     }
 

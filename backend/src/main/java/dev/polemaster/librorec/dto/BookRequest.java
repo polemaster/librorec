@@ -1,14 +1,16 @@
 package dev.polemaster.librorec.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PastOrPresent;
 
+import java.time.LocalDate;
 import java.util.List;
 
 
 public record BookRequest(
         @NotBlank String id,
         @NotBlank String title,
-        String releaseDate,
+        @PastOrPresent LocalDate releaseDate,
         List<String> authors, List<String> genres,
         List<String> moods, List<String> tags) {
 

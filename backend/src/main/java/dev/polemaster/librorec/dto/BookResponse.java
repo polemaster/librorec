@@ -11,7 +11,7 @@ public record BookResponse(String id, String title, String releaseDate,
         return new BookResponse(
                 doc.slug(),
                 doc.title(),
-                doc.release_date(),
+                doc.releaseDate(),
                 doc.coverUrl(),
                 doc.seriesName(),
                 doc.author_names(),
@@ -24,9 +24,9 @@ public record BookResponse(String id, String title, String releaseDate,
 
     public static BookResponse from(OpenLibraryResponse.Document doc) {
         return new BookResponse(
-                doc.key(), // slug
+                doc.key(), // id
                 doc.title(),
-                doc.first_publish_year(), // only year
+                doc.releaseYear(), // only year
                 doc.coverUrl(),
                 doc.seriesName(),
                 doc.author_name(),
