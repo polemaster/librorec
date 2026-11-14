@@ -5,8 +5,7 @@ import dev.polemaster.librorec.dto.BookSearchApi;
 import dev.polemaster.librorec.dto.LLMResponse;
 import dev.polemaster.librorec.dto.RecommendationMethod;
 import dev.polemaster.librorec.dto.RecommendationResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -15,9 +14,9 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class RecommendationService {
-    private static final Logger log = LoggerFactory.getLogger(RecommendationService.class);
 
     private final ChatClient openAiClient;
     private final ChatClient geminiClient;

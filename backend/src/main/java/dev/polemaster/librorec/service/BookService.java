@@ -2,8 +2,7 @@ package dev.polemaster.librorec.service;
 
 
 import dev.polemaster.librorec.dto.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -13,9 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+@Slf4j
 @Service
 public class BookService {
-    private static final Logger log = LoggerFactory.getLogger(BookService.class);
 
     private final RestClient hardcoverClient;
     private final RestClient openLibraryClient;

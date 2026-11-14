@@ -12,7 +12,7 @@ public record RecommendationResponse(String id, String title, String releaseDate
         return new RecommendationResponse(
                 doc.slug(),
                 doc.title(),
-                doc.release_date(),
+                doc.releaseDate(),
                 doc.coverUrl(),
                 doc.seriesName(),
                 doc.description(),
@@ -25,7 +25,7 @@ public record RecommendationResponse(String id, String title, String releaseDate
         return new RecommendationResponse(
                 doc.key(),
                 doc.title(),
-                doc.first_publish_year(),
+                doc.releaseYear(),
                 doc.coverUrl(),
                 doc.seriesName(),
                 null, // description

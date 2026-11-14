@@ -1,5 +1,7 @@
 package dev.polemaster.librorec.dto;
 
+import java.time.LocalDate;
+import java.time.Year;
 import java.util.List;
 
 public record OpenLibraryResponse(List<Document> docs) {
@@ -7,7 +9,7 @@ public record OpenLibraryResponse(List<Document> docs) {
             String key,
             String title,
             List<String> author_name,
-            String first_publish_year,
+            Year first_publish_year,
             Integer cover_i,
             List<String> subject
     ) {
@@ -18,6 +20,10 @@ public record OpenLibraryResponse(List<Document> docs) {
 
         public String coverUrl() {
             return cover_i != null ? "https://covers.openlibrary.org/b/id/%s-L.jpg".formatted(cover_i) : null;
+        }
+
+        public String releaseYear() {
+            return first_publish_year != null ? first_publish_year.toString() : null;
         }
 
         public String seriesName() {
