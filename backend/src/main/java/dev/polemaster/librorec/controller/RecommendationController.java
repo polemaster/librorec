@@ -1,9 +1,9 @@
 package dev.polemaster.librorec.controller;
 
-import dev.polemaster.librorec.dto.BookRequest;
-import dev.polemaster.librorec.dto.BookSearchApi;
-import dev.polemaster.librorec.dto.RecommendationMethod;
-import dev.polemaster.librorec.dto.RecommendationResponse;
+import dev.polemaster.librorec.dto.book.BookRequest;
+import dev.polemaster.librorec.dto.book.BookSearchApi;
+import dev.polemaster.librorec.dto.recommendation.RecommendationMethod;
+import dev.polemaster.librorec.dto.recommendation.RecommendationResponse;
 import dev.polemaster.librorec.service.RecommendationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

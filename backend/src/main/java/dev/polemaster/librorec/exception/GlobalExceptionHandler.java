@@ -143,6 +143,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, problem, headers, status, request);
     }
 
+    @ExceptionHandler(GoodreadsScrapingException.class)
+    public ProblemDetail handleGoodreadsScrapingException(GoodreadsScrapingException ex) {
+        log.error("Goodreads scraping failed for ISBN [{}]: {}", ex.getIsbn(), ex.getMessage(), ex);
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_GATEWAY,
+                "Failed to retrieve or parse book review data from upstream provider.");
+        problem.setTitle("Upstream Provider Error");
+        problem.setProperty("isbn", ex.getIsbn());
+        return problem;
+    }
+
     // 6. Database Constraint Violations (e.g., Duplicate Key)
 //    @ExceptionHandler(DataIntegrityViolationException.class)
 //    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {

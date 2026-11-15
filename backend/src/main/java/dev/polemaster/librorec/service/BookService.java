@@ -1,7 +1,12 @@
 package dev.polemaster.librorec.service;
 
 
-import dev.polemaster.librorec.dto.*;
+import dev.polemaster.librorec.dto.book.BookResponse;
+import dev.polemaster.librorec.dto.book.BookSearchApi;
+import dev.polemaster.librorec.dto.external.GraphQlRequest;
+import dev.polemaster.librorec.dto.external.HardcoverResponse;
+import dev.polemaster.librorec.dto.external.OpenLibraryResponse;
+import dev.polemaster.librorec.dto.recommendation.RecommendationResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

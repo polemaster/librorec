@@ -1,7 +1,7 @@
 package dev.polemaster.librorec.controller;
 
-import dev.polemaster.librorec.dto.BookResponse;
-import dev.polemaster.librorec.dto.BookSearchApi;
+import dev.polemaster.librorec.dto.book.BookResponse;
+import dev.polemaster.librorec.dto.book.BookSearchApi;
 import dev.polemaster.librorec.service.BookService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

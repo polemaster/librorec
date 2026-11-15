@@ -1,8 +1,8 @@
 package dev.polemaster.librorec.service;
 
-import dev.polemaster.librorec.dto.BookResponse;
-import dev.polemaster.librorec.dto.BookSearchApi;
-import dev.polemaster.librorec.dto.RecommendationResponse;
+import dev.polemaster.librorec.dto.book.BookResponse;
+import dev.polemaster.librorec.dto.book.BookSearchApi;
+import dev.polemaster.librorec.dto.recommendation.RecommendationResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -13,7 +13,6 @@ import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
-import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;

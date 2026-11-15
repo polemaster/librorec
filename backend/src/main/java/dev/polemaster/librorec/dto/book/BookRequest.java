@@ -1,4 +1,4 @@
-package dev.polemaster.librorec.dto;
+package dev.polemaster.librorec.dto.book;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PastOrPresent;

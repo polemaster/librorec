@@ -1,4 +1,4 @@
-package dev.polemaster.librorec.dto;
+package dev.polemaster.librorec.dto.external;
 
 import java.time.LocalDate;
 import java.util.List;

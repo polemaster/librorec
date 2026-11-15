@@ -1,4 +1,7 @@
-package dev.polemaster.librorec.dto;
+package dev.polemaster.librorec.dto.book;
+
+import dev.polemaster.librorec.dto.external.HardcoverResponse;
+import dev.polemaster.librorec.dto.external.OpenLibraryResponse;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package dev.polemaster.librorec.dto;
+package dev.polemaster.librorec.dto.book;
 
 public enum BookSearchApi {
     HARDCOVER,

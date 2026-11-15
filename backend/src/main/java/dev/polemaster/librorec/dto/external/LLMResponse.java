@@ -1,4 +1,4 @@
-package dev.polemaster.librorec.dto;
+package dev.polemaster.librorec.dto.external;
 
 
 import java.util.List;

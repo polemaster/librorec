@@ -1,10 +1,10 @@
 package dev.polemaster.librorec.service;
 
-import dev.polemaster.librorec.dto.BookRequest;
-import dev.polemaster.librorec.dto.BookSearchApi;
-import dev.polemaster.librorec.dto.LLMResponse;
-import dev.polemaster.librorec.dto.RecommendationMethod;
-import dev.polemaster.librorec.dto.RecommendationResponse;
+import dev.polemaster.librorec.dto.book.BookRequest;
+import dev.polemaster.librorec.dto.book.BookSearchApi;
+import dev.polemaster.librorec.dto.external.LLMResponse;
+import dev.polemaster.librorec.dto.recommendation.RecommendationMethod;
+import dev.polemaster.librorec.dto.recommendation.RecommendationResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Qualifier;
